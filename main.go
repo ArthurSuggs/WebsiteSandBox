@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -20,6 +21,7 @@ func main() {
 	http.Handle("/rtnJson", http.HandlerFunc(rtnJson))
 	http.Handle("/rtnLineJson", http.HandlerFunc(rtnLineJson))
 	http.Handle("/testData", http.HandlerFunc(testData))
+	http.Handle("/mongoData", http.HandlerFunc(mongoData))
 	/*http.Handle("/css/", http.FileServer(http.Dir("css")))
 	http.Handle("/js/", http.FileServer(http.Dir("js")))*/
 	http.Handle("/", http.FileServer(http.Dir("js/")))
@@ -66,6 +68,41 @@ type LineChartData struct {
 	]);*/
 }
 
+func mongoData(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := ""
+	Airline := ""
+	FlightId := "*"
+	TailId := ""
+	DateYYYYMMDD := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "Parser":
+				ParserName = value
+			case "FlightId":
+				FlightId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	//fmt.Println("Airline:", Airline, "ParserName", ParserName)
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ldate))
+	defer ms.DisconnectFromMongo()
+	//data := ms.FindStuffInCollection("KA_SPIRIT_N659NK_NKS404_20210211122917Z_ENG_CVM_ENGLOG.CSV.ZIP")
+	//data := FingerPrintResults{}
+	data := ms.FindRgxMatchInCollection(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+	fmt.Println(req.Method, "mongoData with Airline:", Airline, "ParserName", ParserName, "Records found: ", len(data))
+	fmt.Println(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+}
 func rtnLineJson(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	lcd := LineChartData{
@@ -139,6 +176,8 @@ func ReadCsv(filename string) ([][]string, error) {
 
 	return lines, nil
 }
+
+//need to removed entire slice if one of the elements fails the conversion to float
 func ConvertSliceOfStringSlicesToSliceOfFloatSlices(csvRows [][]string) [][]float64 {
 	//var sliceOfFloat64Slices [][]float64
 	sliceOfFloat64Slices := make([][]float64, len(csvRows))
