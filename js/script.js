@@ -162,3 +162,49 @@ function populateBarAndOrPieCharts(rowData) {
       var chartBar = new google.visualization.BarChart(document.getElementById('chart_bar'));
       chartBar.draw(data, options);
 }
+
+google.charts.load('current', {'packages':['table']});
+google.charts.setOnLoadCallback(drawIT);
+
+//this creates a table from a flat json
+function drawIT() {
+  fetch('http://localhost:8080/mongoData?Airline=SPIRIT&Parser=SWVersionsSES&TailId=N674NK&FlightId=.*&DateYYYYMMDD=2021030')
+    .then(response => response.json())
+  .then(info => {
+    //console.log(info)
+var data = new google.visualization.DataTable();
+//add the column names only do one
+var first = true
+var rows = new Array();
+var currentRow = new Array();
+//Iterate through array of responses
+for (var key of info) {
+    //Go thur the data a populate the column names
+    //and get the first row of data
+    //This has a random order for the keys
+    for (var cname of Object.keys(key)) {
+        if (first === true){
+          console.log(cname)
+          data.addColumn(typeof key[cname], cname)
+        }
+        currentRow.push(key[cname])
+    }
+    /*for (var cname of Object.keys(key)) {
+        if (first === true){
+          console.log(cname)
+          data.addColumn(typeof key[cname], cname)
+        }
+        currentRow.push(key[cname])
+    }*/
+    first = false
+    rows.push(currentRow)
+    currentRow = new Array();
+}
+
+data.addRows(rows);
+
+var table = new google.visualization.Table(document.getElementById('table_div'));
+
+table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+});
+}

@@ -122,12 +122,12 @@ func (m *MgSession) FindRgxMatchInCollectionAggreated(indexedName string, rgx st
 }
 func (m *MgSession) FindRgxMatchInCollection(rgx string) []interface{} {
 	var res []interface{}
-	m.Collection.Find(bson.M{
+	fmt.Println(m.Collection.Find(bson.M{
 		"filename": bson.RegEx{
 			Pattern: rgx,
 			Options: "i",
 		},
-	}).All(&res)
+	}).All(&res))
 	return res
 }
 func (m *MgSession) FindStuffInCollection(FileName string) []interface{} {
