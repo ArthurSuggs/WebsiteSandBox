@@ -165,10 +165,11 @@ function populateBarAndOrPieCharts(rowData) {
 
 google.charts.load('current', {'packages':['table']});
 google.charts.setOnLoadCallback(drawIT);
-
+//FileName,TailId,TakeOff,Landing,Departure,Destination,FlightID,StartOf10K,EndOf10K,TimeAbove10K,InternetStatus10k,InternetStatusGnd,IntranetStatus10k,IntranetStatusGnd,Signal10k,SignalGnd,Cabin10k,CabinGnd,PortalScore,Wap1Score,Wap2Score,Wap3Score,KamuStateScore,KamuCommScore,AAAScore,GCMSScore,BroadbandSwitchScore,RxTotal,TxTotal,RebootsOnGround,RebootsInAir,Above10k,
 //this creates a table from a flat json
 function drawIT() {
-  fetch('http://localhost:8080/mongoData?Airline=SPIRIT&Parser=SWVersionsSES&TailId=N674NK&FlightId=.*&DateYYYYMMDD=2021030')
+  //fetch('http://localhost:8080/mongoData?Airline=SPIRIT&Parser=SWVersionsSES&TailId=N674NK&FlightId=.*&DateYYYYMMDD=2021030')
+  fetch('http://localhost:8080/mongoData?Airline=SPIRIT&Parser=FPMfastSES&TailId=N661NK&FlightId=.*&DateYYYYMMDD=202103')
     .then(response => response.json())
   .then(info => {
     //console.log(info)
