@@ -5,62 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <link rel="stylesheet" href="css/main.css">
-  <title>Document</title>
+  <title>Single Tail Dashboard</title>
   <!-- <script src="js/loader.js"></script> -->
   <!-- <script src="js/script.js"></script> -->
   <script src="loader.js"></script>
-
 <!-- <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script> -->
   <!-- <script src="script.js"></script> -->
 </head>
-<body>
+<body style="background-color:DodgerBlue;">
   <label for="Airline">Airline</label><br>
   <input type="text" id="Airline" name="Airline" value="SPIRIT"><br>
   <label for="Parser">Parser</label><br>
     <select id="Parser" name="Parser" style= "width:25%">
       <option value="FPMfastSES">FPMfastSES</option>
       <option value="SWVersionsSES">SWVersionsSES</option>
-  	<option value="UsageSummary">UsageSummary</option>
+  	  <option value="UsageSummary">UsageSummary</option>
       <option value="FPMfastSESUDP">FPMfastSESUDP</option>
-      <option value="AAUGraphSES">AAUGraphSES</option>
       <option value="UdpTraceSummary">UdpTraceSummary</option>
-      <option value="UDPTraceBandwidthDetails">UDPTraceBandwidthDetails</option>
-      <option value="UdpTraceDetailsToExcel">UdpTraceDetailsToExcel</option>
       <option value="Messages">Messages</option>
-      <option value="SwGraph">SwGraph</option>
-      <option value="LanIPGraph">LanIPGraph</option>
-      <option value="AAUGraph">AAUGraph</option>
-      <option value="SWVersions">SWVersions</option>
-      <option value="SWVersionsSES">SWVersions-SES</option>
       <option value="MonitSummary">MonitSummary</option>
-  	<option value="WapData">WapData</option>
     </select><br>
     <label for="Tail">Tail</label><br>
   <select type="text" id="Tail" name="Tail" value="N659NK"><br>
-	<option value="N661NK">N661NK</option>
-	<option value="N672NK">N672NK</option>
-	<option value="N674NK">N674NK</option>
-	<option value="N679NK">N679NK</option>
-	<option value="N680NK">N680NK</option>
-	<option value="N684NK">N684NK</option>
-	<option value="N686NK">N686NK</option>
+  	<option value="N661NK">N661NK</option>
+  	<option value="N672NK">N672NK</option>
+  	<option value="N674NK">N674NK</option>
+  	<option value="N679NK">N679NK</option>
+  	<option value="N680NK">N680NK</option>
+  	<option value="N684NK">N684NK</option>
+  	<option value="N686NK">N686NK</option>
   </select><br>
-    <label for="Date">Date</label><br>
+  <label for="FlightId">FlightId</label><br>
+  <select type="text" id="FlightId" name="FlightId" value=""><br>
+  </select><br>
+  <label for="Date">Date</label><br>
   <input type=text id="Date" name="Date" value="20210305"><br>
   <button id="Refresh">Refresh</button>
-  <button id="ColumnChartButton">ColumnChart</button>
-      <div id="div1"></div>
-      <div id="table_div"></div>
-      <div id="time_line"></div>
-      <div id="column_chart"></div>
-      <div id="line_chart"></div>
-     <!-- <div id="chart_pie"></div> -->
-     <div id="chart_bar" style="width: 100%; height: 150vh;"></div>
-     <!-- <div id="WapManager"></div> -->
-     <!-- <div id="UserManager"></div> -->
-     <script src="scriptColumnChart.js"></script>
-     <script src="scriptTimeLine.js"></script>
-     <script src="scriptLineChart.js"></script>
-     <script src="scriptTable.js"></script>
+    <div id="div1"></div>
+    <div id="table_div"></div>
+    <div id="time_line"></div>
+    <div id="column_chart"></div>
+    <div id="line_chart"></div>
+    <script src="scriptColumnChart.js"></script>
+    <script src="scriptTimeLine.js"></script>
+    <script src="scriptLineChart.js"></script>
+    <script src="scriptTable.js"></script>
+    <!-- <script src="common.js" type="module" ></script> -->
 </body>
 </html>

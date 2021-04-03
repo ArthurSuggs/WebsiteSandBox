@@ -20,35 +20,36 @@ function drawColumnChart() {
       .then(response => response.json())
     .then(info => {
       var columns = new Array();
-      var signal10k = 0
-      var cabin10k = 0
+      var internetstatus10k = 0
+      var intranetstatus10k = 0
       var timeabove10k = 0
       var flights = 0
       //var dataTable = new google.visualization.DataTable();
-      columns.push(["TailId",'Signal', 'Cabin', 'Time Above 10k'])
+      columns.push(["TailId",'Internet', 'Intranet', 'Time Above 10k'])
       //Iterate through array of responses
       for (var key of info) {
         if (key['above10k'] && key['timeabove10k'] > 30){
-          signal10k += Number(key['signal10k'])
-          cabin10k += Number(key['cabin10k'])
+          internetstatus10k += Number(key['internetstatus10k'])
+          intranetstatus10k += Number(key['intranetstatus10k'])
           timeabove10k += Number(key['timeabove10k'])
           flights++
         }
       }
       if (flights > 0) {
-        signal10k = signal10k/flights
-        cabin10k = cabin10k/flights
+        internetstatus10k = internetstatus10k/flights
+        intranetstatus10k = intranetstatus10k/flights
         timeabove10k = timeabove10k/flights
       }
-      columns.push([tail,signal10k,cabin10k,timeabove10k])
+      columns.push([tail,internetstatus10k,intranetstatus10k,timeabove10k])
       //dataTable.addRows(columns)
       var data = google.visualization.arrayToDataTable(columns)
 
         var options = {
           chart: {
-            title: 'Signal, Cabin and Time Over 10k',
+            title: 'Internet, Intranet and Time Over 10k',
             subtitle: 'Average over the date range provided',
-          }
+          },
+          width: '100%', height: '100%'
         };
 
         var chart = new google.charts.Bar(document.getElementById('column_chart'));

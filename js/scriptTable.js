@@ -1,7 +1,15 @@
-<!--Load the AJAX API-->
+
 var el = document.getElementById("Refresh")
 if(el){
     el.addEventListener("click", drawTable);
+}
+
+function addOptionsToSelect(setOfOptions, selectId) {
+  var select = document.getElementById(selectId);
+  var arrayOfOptions = [... setOfOptions]
+  for(index in arrayOfOptions) {
+      select.options[select.options.length] = new Option(arrayOfOptions[index], index);
+  }
 }
 
 google.charts.load('current', {'packages':['table']});
@@ -22,6 +30,7 @@ function drawTable() {
       var first = true
       var rows = new Array();
       var currentRow = new Array();
+      var flightIds = new Set();
       data.addColumn('datetime', 'startof10k')
       data.addColumn('datetime', 'endof10k')
       data.addColumn('number', 'timeabove10k')
@@ -32,7 +41,7 @@ function drawTable() {
       data.addColumn('number', 'intranetstatus10k')
       for (var key of info) {
         if (key['above10k'] && key['timeabove10k'] > 30){
-          console.log(key['departure'])
+          flightIds.add(key['flightid'])
           rows.push([new Date(key['startof10k']),new Date(key['endof10k']),
           Number(key['timeabove10k']), key['departure'],key['departure'],
           key['flightid'],Number(key['internetstatus10k']),
@@ -40,6 +49,7 @@ function drawTable() {
         ])
         }
       }
+      addOptionsToSelect(flightIds, 'FlightId')
       rows.sort(sortFunction);
 
       data.addRows(rows);

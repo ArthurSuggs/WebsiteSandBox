@@ -97,29 +97,12 @@ func (m *MgSession) DeleteFromCollection(indexedName string, indexedValue string
 	}
 }
 
-/*func (m *MgSession) FindOneInCollection(indexedName string, indexedValue string) Result {
-	result := Result{}
-	m.Collection.Find(bson.M{indexedName: indexedValue}).One(&result)
-	return result
-}*/
 func (m *MgSession) FindAllInCollection(indexedName string, indexedValue string) []interface{} {
 	var result []interface{}
 	m.Collection.Find(bson.M{indexedName: indexedValue}).All(&result)
 	return result
 }
 
-//dont work
-func (m *MgSession) FindRgxMatchInCollectionAggreated(indexedName string, rgx string) []interface{} {
-	var result []interface{}
-	m.Collection.Find(bson.M{
-		indexedName: bson.RegEx{
-			Pattern: rgx,
-			Options: "i",
-		},
-	}).All(&result)
-
-	return result
-}
 func (m *MgSession) FindRgxMatchInCollection(rgx string) []interface{} {
 	var res []interface{}
 	fmt.Println(m.Collection.Find(bson.M{

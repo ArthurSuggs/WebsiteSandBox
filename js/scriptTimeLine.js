@@ -46,6 +46,7 @@ function drawtimelineChart() {
       }
         var options = {
      timeline: { colorByRowLabel: true },
+      width: '100%', height: '100%',
      backgroundColor: '#ffd'
    };
 
