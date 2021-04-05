@@ -72,7 +72,7 @@ func mongoData(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 	//fmt.Println("Airline:", Airline, "ParserName", ParserName)
-	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ldate))
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
 	defer ms.DisconnectFromMongo()
 	//data := ms.FindStuffInCollection("KA_SPIRIT_N659NK_NKS404_20210211122917Z_ENG_CVM_ENGLOG.CSV.ZIP")
 	//data := FingerPrintResults{}

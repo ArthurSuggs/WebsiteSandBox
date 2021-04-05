@@ -27,22 +27,23 @@ function drawColumnChart() {
       //var dataTable = new google.visualization.DataTable();
       columns.push(["TailId",'Internet', 'Intranet', 'Time Above 10k'])
       //Iterate through array of responses
-      for (var key of info) {
-        if (key['above10k'] && key['timeabove10k'] > 30){
-          internetstatus10k += Number(key['internetstatus10k'])
-          intranetstatus10k += Number(key['intranetstatus10k'])
-          timeabove10k += Number(key['timeabove10k'])
-          flights++
+      if(info){
+        for (var key of info) {
+          if (key['above10k'] && key['timeabove10k'] > 30){
+            internetstatus10k += Number(key['internetstatus10k'])
+            intranetstatus10k += Number(key['intranetstatus10k'])
+            timeabove10k += Number(key['timeabove10k'])
+            flights++
+          }
         }
-      }
-      if (flights > 0) {
-        internetstatus10k = internetstatus10k/flights
-        intranetstatus10k = intranetstatus10k/flights
-        timeabove10k = timeabove10k/flights
-      }
-      columns.push([tail,internetstatus10k,intranetstatus10k,timeabove10k])
-      //dataTable.addRows(columns)
-      var data = google.visualization.arrayToDataTable(columns)
+        if (flights > 0) {
+          internetstatus10k = internetstatus10k/flights
+          intranetstatus10k = intranetstatus10k/flights
+          timeabove10k = timeabove10k/flights
+        }
+        columns.push([tail,internetstatus10k,intranetstatus10k,timeabove10k])
+        //dataTable.addRows(columns)
+        var data = google.visualization.arrayToDataTable(columns)
 
         var options = {
           chart: {
@@ -54,5 +55,6 @@ function drawColumnChart() {
 
         var chart = new google.charts.Bar(document.getElementById('column_chart'));
         chart.draw(data, google.charts.Bar.convertOptions(options));
+      }
   });
 }

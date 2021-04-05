@@ -15,15 +15,18 @@ var UsageBarStruct = [
   ['number', 'logpurchase']
 ]
 function drawBarChart() {
-   drawBarChartGeneric('UsageSummary',UsageBarStruct,'usage_bar')
+   drawBarChartGeneric('UsageSummary',UsageBarStruct,'usage_bar',true)
 }
-function drawBarChartGeneric(parser,genStruct,ElementId) {
+function drawBarChartGeneric(parser,genStruct,ElementId,useFlightId) {
   var airline = document.getElementById("Airline").value
   //var parser = document.getElementById("Parser").value
   var date = document.getElementById("Date").value
   var tail = document.getElementById("Tail").value
 
-  var flightId = ".*"//document.getElementById("FlightId").value
+  var flightId = ".*"
+  if(useFlightId) {
+    flightId = document.getElementById("FlightId").value
+  }
   fetch('http://localhost:8080/mongoData?Airline='+airline+'&Parser='+parser+
   '&TailId='+tail+'&FlightId='+flightId+'&DateYYYYMMDD='+date)
     .then(response => response.json())
@@ -34,32 +37,34 @@ function drawBarChartGeneric(parser,genStruct,ElementId) {
     for (index in genStruct) {
       data.addColumn(genStruct[index][0],genStruct[index][1])
     }
-    for (var key of info) {
-      //Hate to hard code this.
-      //Maybe I can add it to a class which holds the gen sturct
-      if (parser === "FPMfastSES") {
-        if (key['above10k'] && key['timeabove10k'] > 30) {
-          flightIds.add(key['flightid'])
-          rows.push(AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, key))
-        }
-      } else if (parser === "UsageSummary") {
-        if ((key['logpurchase'] > 1) || (key['autowanrxmb'] > 10)) {
-          rows.push(AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, key))
+    if(info){
+      for (var key of info) {
+        //Hate to hard code this.
+        //Maybe I can add it to a class which holds the gen sturct
+        if (parser === "FPMfastSES") {
+          if (key['above10k'] && key['timeabove10k'] > 30) {
+            flightIds.add(key['flightid'])
+            rows.push(AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, key))
+          }
+        } else if (parser === "UsageSummary") {
+          if ((key['logpurchase'] > 1) || (key['autowanrxmb'] > 10)) {
+            rows.push(AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, key))
+          }
         }
       }
+      rows.sort(sortFunction);
+      data.addRows(rows);
+      options = {'title':parser,
+                  /*width: '100%',
+
+                  height: '100%'//};*/
+                  showTextEvery:1,
+                  width: '100%',
+                  height: rows.length*50,
+          bar: {groupWidth: "95%"},
+              };
+
+      chartBar.draw(data, options);
     }
-    rows.sort(sortFunction);
-    data.addRows(rows);
-    options = {'title':parser,
-                /*width: '100%',
-
-                height: '100%'//};*/
-                showTextEvery:1,
-                width: '100%',
-                height: rows.length*50,
-        bar: {groupWidth: "95%"},
-            };
-
-    chartBar.draw(data, options);
   });
 }

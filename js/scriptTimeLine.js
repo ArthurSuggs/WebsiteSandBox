@@ -30,27 +30,29 @@ function drawtimelineChart() {
       //TODO:Make the Keys and column names dymanmic
       var rows = new Array();
       //Iterate through array of responses
-      for (var key of info) {
-        if (key['above10k']){
-        var startDate = new Date(key['takeoff'])
-        var endDate = new Date(key['landing'])
-        if (startDate > endDate){
+      if(info){
+        for (var key of info) {
+          if (key['above10k']){
+          var startDate = new Date(key['takeoff'])
+          var endDate = new Date(key['landing'])
+          if (startDate > endDate){
 
-        } else{
-          rows.push([key['tailid'],key['flightid'],startDate,endDate])
-          dataTable.addRows(rows)
+          } else{
+            rows.push([key['tailid'],key['flightid'],startDate,endDate])
+            dataTable.addRows(rows)
+          }
+
+            rows = new Array();
+          }
         }
+      var options = {
+          timeline: { colorByRowLabel: true },
+          width: '100%', height: '100%',
+          backgroundColor: '#ffd'
+        };
 
-          rows = new Array();
-        }
-      }
-        var options = {
-     timeline: { colorByRowLabel: true },
-      width: '100%', height: '100%',
-     backgroundColor: '#ffd'
-   };
-
-   chart.draw(dataTable, options);
+      chart.draw(dataTable, options);
+    }
   });
 }
 

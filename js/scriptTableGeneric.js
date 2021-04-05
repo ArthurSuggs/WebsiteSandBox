@@ -41,18 +41,21 @@ google.charts.load('current', {'packages':['table']});
 google.charts.setOnLoadCallback(drawTable);
 
 function drawTable() {
-  drawTableGeneric('FPMfastSES',FPMFastStruct,'fpm_table')
-  drawTableGeneric('UsageSummary',UsageSummaryStruct,'usage_table')
+  drawTableGeneric('FPMfastSES',FPMFastStruct,'fpm_table',false)
+  drawTableGeneric('UsageSummary',UsageSummaryStruct,'usage_table',true)
 }
 
-function drawTableGeneric(parser,genStruct,ElementId) {
+function drawTableGeneric(parser,genStruct,ElementId,useFlightId) {
 
     var airline = document.getElementById("Airline").value
     //var parser = document.getElementById("Parser").value
     var date = document.getElementById("Date").value
     var tail = document.getElementById("Tail").value
 
-    var flightId = ".*"//document.getElementById("FlightId").value
+    var flightId = ".*"
+    if(useFlightId) {
+      flightId = document.getElementById("FlightId").value
+    }
     fetch('http://localhost:8080/mongoData?Airline='+airline+'&Parser='+parser+
     '&TailId='+tail+'&FlightId='+flightId+'&DateYYYYMMDD='+date)
       .then(response => response.json())
@@ -64,24 +67,32 @@ function drawTableGeneric(parser,genStruct,ElementId) {
       for (index in genStruct) {
         data.addColumn(genStruct[index][0],genStruct[index][1])
       }
-      for (var key of info) {
-        //Hate to hard code this.
-        //Maybe I can add it to a class which holds the gen sturct
-        if (parser === "FPMfastSES") {
-          if (key['above10k'] && key['timeabove10k'] > 30) {
-            flightIds.add(key['flightid'])
+      if(info){
+        for (var key of info) {
+          //Hate to hard code this.
+          //Maybe I can add it to a class which holds the gen sturct
+          //console.log(key)
+          if (parser === "FPMfastSES") {
+            if (key['above10k'] && key['timeabove10k'] > 0) {
+              flightIds.add(key['flightid'])
+              rows.push(AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, key))
+            }
+          } else {
             rows.push(AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, key))
           }
-        } else {
-          rows.push(AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, key))
         }
+        if (parser === "FPMfastSES") {
+          addOptionsToSelect(flightIds, 'FlightId')
+        }
+        if (rows.length > 0) {
+          rows.sort(sortFunction);
+          data.addRows(rows);
+          table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+        } else {
+          console.log("No data in",airline, date, tail, parser,genStruct,ElementId )
+        }
+
       }
-      if (parser === "FPMfastSES") {
-        addOptionsToSelect(flightIds, 'FlightId')
-      }
-      rows.sort(sortFunction);
-      data.addRows(rows);
-      table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
   });
 }
 function addOptionsToSelect(setOfOptions, selectId) {

@@ -20,14 +20,16 @@ function drawLineChart() {
       var flights = 0
       //var OneMegM = 1000000
       var columnNameArray = ['takeoff','rxtotal','txtotal','timeabove10k']
-      for (var key of info) {
-        if (key['above10k'] && key['timeabove10k'] > 30){
-          //console.log(key['flightid'])
-          rows.push([new Date(key['startof10k']),Number(key['rxtotal']),Number(key['txtotal']),Number(key['timeabove10k'])])
+      if(info){
+        for (var key of info) {
+          if (key['above10k'] && key['timeabove10k'] > 30){
+            //console.log(key['flightid'])
+            rows.push([new Date(key['startof10k']),Number(key['rxtotal']),Number(key['txtotal']),Number(key['timeabove10k'])])
+          }
         }
-      }
-      rows.sort(sortFunction);
-      populateRxTxLineChart(rows)
+        rows.sort(sortFunction);
+        populateRxTxLineChart(rows)
+    }
   });
 }
 function sortFunction(a, b) {
