@@ -1,7 +1,13 @@
-<!--Load the AJAX API-->
+<!--Load the AJAX API-->DeepDive
 var el = document.getElementById("Refresh")
+var dd = document.getElementById("DeepDive")
 if(el){
-    el.addEventListener("click", drawTable);
+    //el.addEventListener("click", drawTableForDeepDive);
+    el.addEventListener("click", drawTableForFleetHealth);
+}
+if(dd){
+    //el.addEventListener("click", drawTableForDeepDive);
+    el.addEventListener("click", drawTableForDeepDive);
 }
 //The generic table sturct but be and array of 2d arrays
 //index 0 is type
@@ -23,7 +29,13 @@ var UsageSummaryStruct = [
   ['number', 'servicetput'],
   ['string', 'producttype']
 ]
-
+var FleetHealthStruct = [
+    ['string', 'TailId'],
+    ['number', 'Internetstatus10k'],
+    ['number', 'Intranetstatus10k'],
+    ['number', 'Flights'],
+    ['number', 'RebootsInAir']
+]
 var FPMFastStruct = [
   ['datetime', 'startof10k'],
   ['datetime', 'endof10k'],
@@ -38,32 +50,50 @@ var FPMFastStruct = [
 ]
 
 google.charts.load('current', {'packages':['table']});
-google.charts.setOnLoadCallback(drawTable);
+//google.charts.setOnLoadCallback(drawTable);
 
-function drawTable() {
-  drawTableGeneric('FPMfastSES',FPMFastStruct,'fpm_table',false)
-  drawTableGeneric('UsageSummary',UsageSummaryStruct,'usage_table',true)
+function drawTableForDeepDive() {
+  var InfoForDeepDive = {
+    url: "mongoData",
+    airline: document.getElementById("Airline").value,
+    date: document.getElementById("Date").value,
+    tail: document.getElementById("Tail").value,
+    flightId: document.getElementById("FlightId").value
+  }
+  var InfoForFleetHealth = {
+    url: "mongoData",
+    airline: document.getElementById("Airline").value,
+    date: document.getElementById("Date").value,
+    tail: document.getElementById("Tail").value,
+    flightId: ".*"
+  }
+  drawTableGeneric('FPMfastSES',FPMFastStruct,'fpm_table',InfoForFleetHealth)
+  drawTableGeneric('UsageSummary',UsageSummaryStruct,'usage_table',InfoForDeepDive)
 }
 
-function drawTableGeneric(parser,genStruct,ElementId,useFlightId) {
+function drawTableForFleetHealth() {
+  var InfoForFleetHealth = {
+    url: "FleetHealth",
+    airline: document.getElementById("Airline").value,
+    date: document.getElementById("Date").value,
+    tail: ".*",
+    flightId: ".*"
+  }
+  drawTableGeneric('FleetHealth',FleetHealthStruct,'fpm_table',InfoForFleetHealth)
+}
 
-    var airline = document.getElementById("Airline").value
-    //var parser = document.getElementById("Parser").value
-    var date = document.getElementById("Date").value
-    var tail = document.getElementById("Tail").value
-
-    var flightId = ".*"
-    if(useFlightId) {
-      flightId = document.getElementById("FlightId").value
-    }
-    fetch('http://localhost:8080/mongoData?Airline='+airline+'&Parser='+parser+
-    '&TailId='+tail+'&FlightId='+flightId+'&DateYYYYMMDD='+date)
+function drawTableGeneric(parser,genStruct,ElementId,QueryInfo) {
+  /*document.getElementById(ElementId).remove();
+  addElement('div1',ElementId)*/
+    fetch('http://localhost:8080/'+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+parser+
+    '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
       .then(response => response.json())
     .then(info => {
       var table = new google.visualization.Table(document.getElementById(ElementId));
       var data = new google.visualization.DataTable();
       var rows = new Array();
       var flightIds = new Set();
+      var links = new Set();
       for (index in genStruct) {
         data.addColumn(genStruct[index][0],genStruct[index][1])
       }
@@ -77,19 +107,28 @@ function drawTableGeneric(parser,genStruct,ElementId,useFlightId) {
               flightIds.add(key['flightid'])
               rows.push(AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, key))
             }
+          } else if (parser === "FleetHealth"){
+              links.add(key['TailId'])
+              rows.push(AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, key))
           } else {
             rows.push(AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, key))
           }
         }
         if (parser === "FPMfastSES") {
           addOptionsToSelect(flightIds, 'FlightId')
+        } else if (parser === "FleetHealth"){
+          var arrayOfOptions = [... links]
+          for(index in arrayOfOptions) {
+            addAnchor('deep', arrayOfOptions[index], 'deep?Tail=' + arrayOfOptions[index])
+
+          }
         }
         if (rows.length > 0) {
           rows.sort(sortFunction);
           data.addRows(rows);
           table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
         } else {
-          console.log("No data in",airline, date, tail, parser,genStruct,ElementId )
+          console.log("No data in")
         }
 
       }
@@ -97,11 +136,28 @@ function drawTableGeneric(parser,genStruct,ElementId,useFlightId) {
 }
 function addOptionsToSelect(setOfOptions, selectId) {
   var select = document.getElementById(selectId);
+  var currentSelection = select.value
+  var length = select.options.length;
+  for (i = length-1; i >= 0; i--) {
+    select.remove(i)
+    //select.options[i] = null;
+  }
   var arrayOfOptions = [... setOfOptions]
   for(index in arrayOfOptions) {
       select.options[select.options.length] = new Option(arrayOfOptions[index], arrayOfOptions[index]);
   }
+  console.log(currentSelection)
+  if (arrayOfOptions.includes(currentSelection)) {
+    select.options[select.options.length] = new Option(currentSelection, currentSelection);
+  }
 }
+/*function addOptionsToSelect(setOfOptions, selectId) {
+  var select = document.getElementById(selectId);
+  var arrayOfOptions = [... setOfOptions]
+  for(index in arrayOfOptions) {
+      select.options[select.options.length] = new Option(arrayOfOptions[index], arrayOfOptions[index]);
+  }
+}*/
 function AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, flatJson) {
   //Iterate through the sturct and convert the data based on
   //the required type at that position
@@ -114,6 +170,29 @@ function AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, flatJson) {
     } else {
       row.push(flatJson[genStruct[index][1]])
     }
+
   }
   return row
+}
+function addAnchor(parentId, idName, link) {
+  addElement (parentId, idName,"a", link)
+}
+function addElement (parentId, idName,typeOfElement, link) {
+  // create a new div element
+  const newElement = document.createElement(typeOfElement);
+  newElement.setAttribute("id", idName);
+
+  if(link){
+    newElement.setAttribute("href", link);
+  }
+
+  // and give it some content
+  const newContent = document.createTextNode(idName);
+
+  // add the text node to the newly created div
+  newElement.appendChild(newContent);
+
+  // add the newly created element and its content into the DOM
+  const currentElement = document.getElementById(parentId);
+  document.body.insertBefore(newElement, currentElement);
 }

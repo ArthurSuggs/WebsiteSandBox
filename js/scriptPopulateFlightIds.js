@@ -6,8 +6,11 @@ if(el){
 /*function insertAfter(newElement, referenceElement) {
     referenceElement.parentNode.insertBefore(newElement, referenceElement.nextSibling);
 }*/
-function addOptionsToSelect(setOfOptions, selectId) {
+
+//Keep the currently selected if its in the set and empty the list
+/*function addOptionsToSelect(setOfOptions, selectId) {
   var select = document.getElementById(selectId);
+  var currentSelection = select.value
   var length = select.options.length;
   for (i = length-1; i >= 0; i--) {
     select.remove(i)
@@ -16,6 +19,9 @@ function addOptionsToSelect(setOfOptions, selectId) {
   var arrayOfOptions = [... setOfOptions]
   for(index in arrayOfOptions) {
       select.options[select.options.length] = new Option(arrayOfOptions[index], arrayOfOptions[index]);
+  }
+  if setOfOptions.includes(currentSelection) {
+    select.options[select.options.length] = new Option(currentSelection, currentSelection);
   }
 }
 function populateFlightIds() {
@@ -35,3 +41,4 @@ function populateFlightIds() {
       addOptionsToSelect(flightIds, 'FlightId')
   });
 }
+*/

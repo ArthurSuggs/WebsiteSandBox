@@ -113,6 +113,18 @@ func (m *MgSession) FindRgxMatchInCollection(rgx string) []interface{} {
 	}).All(&res))
 	return res
 }
+
+func (m *MgSession) FindRgxMatchInFPMfastSES(rgx string) []SysevtResults {
+	var res []SysevtResults
+	fmt.Println(m.Collection.Find(bson.M{
+		"filename": bson.RegEx{
+			Pattern: rgx,
+			Options: "i",
+		},
+	}).All(&res))
+	return res
+}
+
 func (m *MgSession) FindStuffInCollection(FileName string) []interface{} {
 	var res []interface{}
 	col := m.Collection

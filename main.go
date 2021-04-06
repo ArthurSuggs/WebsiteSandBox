@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -19,6 +20,7 @@ func init() {
 
 func main() {
 	http.Handle("/home", http.HandlerFunc(ServeMainPage))
+	http.Handle("/FleetHealth", http.HandlerFunc(FleetHealthAirline))
 	http.Handle("/deep", http.HandlerFunc(ServeDeepDive))
 	//http.Handle("/rtnJson", http.HandlerFunc(rtnJson))
 	//http.Handle("/rtnLineJson", http.HandlerFunc(rtnLineJson))
@@ -47,6 +49,78 @@ func ServeDeepDive(res http.ResponseWriter, req *http.Request) {
 	tpl.ExecuteTemplate(res, "deep.html", nil)
 }
 
+func FleetHealthAirline(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "FPMfastSES"
+	Airline := ""
+	DateYYYYMMDD := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := GetFPMfastSESFromMongo(Airline, DateYYYYMMDD, ms)
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+
+	fmt.Println(req.Method, "mongoData with Airline:", Airline, "ParserName", ParserName)
+	fmt.Println(Airline + "_" + ".*" + "_" + ".*" + "_" + DateYYYYMMDD)
+}
+
+type InterScores struct {
+	TailId            string
+	Internetstatus10k float64
+	Intranetstatus10k float64
+	Flights           int
+	RebootsInAir      int
+}
+
+func (I *InterScores) UpdateScores(Internetstatus10k float64, Intranetstatus10k float64, RebootsInAir int) {
+	I.Internetstatus10k += Internetstatus10k
+	I.Intranetstatus10k += Intranetstatus10k
+	I.Flights++
+	I.RebootsInAir += RebootsInAir
+}
+func (I *InterScores) CalculateScores() {
+	I.Internetstatus10k = math.Round(I.Internetstatus10k/float64(I.Flights)*100) / 100
+	I.Intranetstatus10k = math.Round(I.Intranetstatus10k/float64(I.Flights)*100) / 100
+}
+
+func GetFPMfastSESFromMongo(Airline string, Date string, ms *MgSession) []InterScores {
+	data := ms.FindRgxMatchInFPMfastSES(Airline + "_" + ".*" + "_" + ".*" + "_" + Date)
+	scoreMap := make(map[string]InterScores)
+	for _, score := range data {
+		if score.Above10k {
+			if interScore, ok := scoreMap[score.TailId]; ok {
+				interScore.UpdateScores(score.InternetStatus10k, score.IntranetStatus10k, score.RebootsInAir)
+				scoreMap[score.TailId] = interScore
+			} else {
+				firstScore := InterScores{
+					TailId:            score.TailId,
+					Internetstatus10k: score.InternetStatus10k,
+					Intranetstatus10k: score.IntranetStatus10k,
+					Flights:           1,
+				}
+				scoreMap[score.TailId] = firstScore
+			}
+		}
+	}
+	var scores []InterScores
+	for _, value := range scoreMap {
+		value.CalculateScores()
+		//scoreMap[key] = value
+		scores = append(scores, value)
+	}
+	return scores
+}
 func mongoData(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	ParserName := ""
