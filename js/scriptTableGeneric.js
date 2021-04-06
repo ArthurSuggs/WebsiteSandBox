@@ -7,7 +7,7 @@ if(el){
 }
 if(dd){
     //el.addEventListener("click", drawTableForDeepDive);
-    el.addEventListener("click", drawTableForDeepDive);
+    dd.addEventListener("click", drawTableForDeepDive);
 }
 //The generic table sturct but be and array of 2d arrays
 //index 0 is type
@@ -119,8 +119,7 @@ function drawTableGeneric(parser,genStruct,ElementId,QueryInfo) {
         } else if (parser === "FleetHealth"){
           var arrayOfOptions = [... links]
           for(index in arrayOfOptions) {
-            addAnchor('deep', arrayOfOptions[index], 'deep?Tail=' + arrayOfOptions[index])
-
+            addAnchor('deep', arrayOfOptions[index], 'deep?Airline=&Tail=' + arrayOfOptions[index])
           }
         }
         if (rows.length > 0) {
