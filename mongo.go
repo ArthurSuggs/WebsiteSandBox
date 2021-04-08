@@ -124,6 +124,26 @@ func (m *MgSession) FindRgxMatchInFPMfastSES(rgx string) []SysevtResults {
 	}).All(&res))
 	return res
 }
+func (m *MgSession) FindRgxMatchInSysevtResults(rgx string) []SysevtResults {
+	var res []SysevtResults
+	fmt.Println(m.Collection.Find(bson.M{
+		"filename": bson.RegEx{
+			Pattern: rgx,
+			Options: "i",
+		},
+	}).All(&res))
+	return res
+}
+func (m *MgSession) FindRgxMatchInSoftwareVersionsSES(rgx string) []SoftwareVersionSesResults {
+	var res []SoftwareVersionSesResults
+	fmt.Println(m.Collection.Find(bson.M{
+		"filename": bson.RegEx{
+			Pattern: rgx,
+			Options: "i",
+		},
+	}).All(&res))
+	return res
+}
 
 func (m *MgSession) FindStuffInCollection(FileName string) []interface{} {
 	var res []interface{}

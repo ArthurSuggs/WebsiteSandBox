@@ -1,5 +1,5 @@
 <!--Load the AJAX API-->
-var el = document.getElementById("Refresh")
+var el = document.getElementById("DeepDive")
 if(el){
     el.addEventListener("click", drawBarChart);
 }
@@ -15,20 +15,23 @@ var UsageBarStruct = [
   ['number', 'logpurchase']
 ]
 function drawBarChart() {
-   drawBarChartGeneric('UsageSummary',UsageBarStruct,'usage_bar',true)
-}
-function drawBarChartGeneric(parser,genStruct,ElementId,useFlightId) {
-  var airline = document.getElementById("Airline").value
-  //var parser = document.getElementById("Parser").value
-  var date = document.getElementById("Date").value
-  var tail = document.getElementById("Tail").value
-
-  var flightId = ".*"
-  if(useFlightId) {
-    flightId = document.getElementById("FlightId").value
+  var InfoForUsageBar = {
+    url: "mongoData",
+    airline: document.getElementById("Airline").value,
+    date: document.getElementById("Date").value,
+    tail: document.getElementById("Tail").value,
+    options: {'title':'Usage Bar Graph',
+                showTextEvery:1,
+                width: '100%',
+        bar: {groupWidth: "95%"},
+      },
+    flightId: document.getElementById("FlightId").value
   }
-  fetch('http://localhost:8080/mongoData?Airline='+airline+'&Parser='+parser+
-  '&TailId='+tail+'&FlightId='+flightId+'&DateYYYYMMDD='+date)
+   drawBarChartGeneric('UsageSummary',UsageBarStruct,'usage_bar',InfoForUsageBar)
+}
+function drawBarChartGeneric(parser,genStruct,ElementId,QueryInfo) {
+  fetch('http://localhost:8080/'+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+parser+
+  '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
   .then(info => {
     var chartBar = new google.visualization.BarChart(document.getElementById(ElementId));
@@ -52,19 +55,14 @@ function drawBarChartGeneric(parser,genStruct,ElementId,useFlightId) {
           }
         }
       }
+    }
+    if (rows.length > 0) {
       rows.sort(sortFunction);
-      data.addRows(rows);
-      options = {'title':parser,
-                  /*width: '100%',
-
-                  height: '100%'//};*/
-                  showTextEvery:1,
-                  width: '100%',
-                  height: rows.length*50,
-          bar: {groupWidth: "95%"},
-              };
-
-      chartBar.draw(data, options);
+      data.addRows(rows);      
+      QueryInfo.options.height.rows.length*50,
+      chartBar.draw(data, QueryInfo.options);
+    } else {
+      console.log("No data in")
     }
   });
 }

@@ -1,5 +1,5 @@
 <!--Load the AJAX API-->
-var el = document.getElementById("Refresh")
+var el = document.getElementById("DeepDive")
 if(el){
     el.addEventListener("click", drawColumnChart);
 }
@@ -12,7 +12,8 @@ google.charts.setOnLoadCallback(drawColumnChart);
 function drawColumnChart() {
 
   var airline = document.getElementById("Airline").value
-    var parser = document.getElementById("Parser").value
+    var parser = 'FPMfastSES'
+	//var parser = document.getElementById("Parser").value
     var date = document.getElementById("Date").value
     var tail = document.getElementById("Tail").value
     fetch('http://localhost:8080/mongoData?Airline='+airline+'&Parser='+parser+

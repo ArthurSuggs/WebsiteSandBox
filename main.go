@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
+	"time"
 )
 
 var tpl *template.Template
@@ -20,8 +22,13 @@ func init() {
 
 func main() {
 	http.Handle("/home", http.HandlerFunc(ServeMainPage))
+	http.Handle("/TailHealth", http.HandlerFunc(ServeTailHealth))
+	http.Handle("/singleFlightAnalysis", http.HandlerFunc(ServeDeepDive))
+
+	http.Handle("/FlightIDs", http.HandlerFunc(FlightIDs))
 	http.Handle("/FleetHealth", http.HandlerFunc(FleetHealthAirline))
-	http.Handle("/deep", http.HandlerFunc(ServeDeepDive))
+	http.Handle("/SWVersionsSES", http.HandlerFunc(SWVersionsSES))
+	//http.Handle("/UsageFileCnt", http.HandlerFunc(UsageFileCnt))
 	//http.Handle("/rtnJson", http.HandlerFunc(rtnJson))
 	//http.Handle("/rtnLineJson", http.HandlerFunc(rtnLineJson))
 	http.Handle("/testData", http.HandlerFunc(testData))
@@ -39,16 +46,119 @@ func ServeMainPage(res http.ResponseWriter, req *http.Request) {
 
 	tpl.ExecuteTemplate(res, "index.html", nil)
 }
+func ServeTailHealth(res http.ResponseWriter, req *http.Request) {
+	err := req.ParseForm()
+	if err != nil {
+		fmt.Println(err)
+	}
 
+	tpl.ExecuteTemplate(res, "TailHealth.html", nil)
+}
 func ServeDeepDive(res http.ResponseWriter, req *http.Request) {
 	err := req.ParseForm()
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	tpl.ExecuteTemplate(res, "deep.html", nil)
+	tpl.ExecuteTemplate(res, "singleFlightAnalysis.html", nil)
+}
+func SWVersionsSES(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "SWVersionsSES"
+	Airline := ""
+	DateYYYYMMDD := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := GetSWVersionsSESFromMongo(Airline, DateYYYYMMDD, ms)
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+
+	fmt.Println(req.Method, "SWVersionsSES with Airline:", Airline, "ParserName", ParserName)
+	fmt.Println(Airline + "_" + ".*" + "_" + ".*" + "_" + DateYYYYMMDD)
+}
+func GetSWVersionsSESFromMongo(Airline string, Date string, ms *MgSession) []SoftwareVersionSesResults {
+	data := ms.FindRgxMatchInSoftwareVersionsSES(Airline + "_" + ".*" + "_" + ".*" + "_" + Date)
+	versionMap := make(map[string]SoftwareVersionSesResults)
+	for _, swVerions := range data {
+
+		TakeOff, _ := time.Parse("2006-01-02T15:04:05Z", swVerions.TakeOff)
+		if sw, ok := versionMap[swVerions.TailId]; ok {
+			highestDateSofar, _ := time.Parse("2006-01-02T15:04:05Z", sw.TakeOff)
+			if TakeOff.After(highestDateSofar) {
+				versionMap[sw.TailId] = sw
+			}
+		} else {
+			versionMap[swVerions.TailId] = swVerions
+		}
+	}
+	var versions []SoftwareVersionSesResults
+	for _, version := range versionMap {
+		versions = append(versions, version)
+	}
+	return versions
+
 }
 
+func FlightIDs(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "FPMfastSES"
+	Airline := ""
+	TailId := ""
+	DateYYYYMMDD := ""
+	ConType := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			case "ConType":
+				ConType = value
+			}
+		}
+	}
+	if ConType == "Legacy" {
+		ParserName = "FPMfast"
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := ms.FindRgxMatchInSoftwareVersionsSES(Airline + "_" + TailId + "_" + ".*" + "_" + DateYYYYMMDD)
+	fligthIds := []string{}
+	for _, fpmfastses := range data {
+		fligthIds = append(fligthIds, GetFlightIdAndDateFromFileName(fpmfastses.FileName))
+	}
+	enc := json.NewEncoder(res)
+	enc.Encode(fligthIds)
+
+	fmt.Println(req.Method, "Getting FlightIDs", ParserName)
+	fmt.Println(Airline + "_" + TailId + "_" + ".*" + "_" + DateYYYYMMDD)
+}
+
+//KA_SPIRIT_N659NK_NKS372_20210213071518Z_OFFLOAD_CVM_UDPTRACEDATALOG.LOG.ZIP
+func GetFlightIdAndDateFromFileName(FileName string) string {
+	FilenameParts := strings.Split(FileName, "_")
+	if len(FilenameParts) > 5 {
+		FlightId := FilenameParts[3]
+		Date := strings.TrimSuffix(FilenameParts[4], "Z")
+		return FlightId + "_" + Date + "Z"
+	}
+	return FileName
+}
 func FleetHealthAirline(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	ParserName := "FPMfastSES"
@@ -71,7 +181,7 @@ func FleetHealthAirline(res http.ResponseWriter, req *http.Request) {
 	enc := json.NewEncoder(res)
 	enc.Encode(data)
 
-	fmt.Println(req.Method, "mongoData with Airline:", Airline, "ParserName", ParserName)
+	fmt.Println(req.Method, "FPMfastSES with Airline:", Airline, "ParserName", ParserName)
 	fmt.Println(Airline + "_" + ".*" + "_" + ".*" + "_" + DateYYYYMMDD)
 }
 
@@ -121,6 +231,7 @@ func GetFPMfastSESFromMongo(Airline string, Date string, ms *MgSession) []InterS
 	}
 	return scores
 }
+
 func mongoData(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	ParserName := ""

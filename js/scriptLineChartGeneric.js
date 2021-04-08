@@ -1,5 +1,5 @@
 <!--Load the AJAX API-->
-var el = document.getElementById("Refresh")
+var el = document.getElementById("DeepDive")
 if(el){
     el.addEventListener("click", drawLineChartplease);
 }
@@ -13,12 +13,38 @@ var AAUGraphSESStruct = {'aaugraphses': [
   ['number', 'bytesrxair'],
   ['number', 'altitude'],
 ]}
+var wap1dataStruct = { "wap1data" : [                
+                        ['datetime', 'currenttime'],
+                       // ['number','days_active'],
+                        //['number','hours_active'],
+                        //['number','minutes_active'],
+                       // ['number','seconds_active'],
+                        ['number','bytes_sent'],
+                        ['number','bytes_received']],
+					"wap2data" : [                
+                        ['datetime', 'currenttime'],
+                       // ['number','days_active'],
+                        //['number','hours_active'],
+                        //['number','minutes_active'],
+                       // ['number','seconds_active'],
+                        ['number','bytes_sent'],
+                        ['number','bytes_received']],
+						"wap3data" : [                
+                        ['datetime', 'currenttime'],
+                       // ['number','days_active'],
+                        //['number','hours_active'],
+                        //['number','minutes_active'],
+                       // ['number','seconds_active'],
+                        ['number','bytes_sent'],
+                        ['number','bytes_received']],
+}
 
-google.charts.load('current', {'packages':['line']});
+google.charts.load('current', {'packages':['core']});
 google.charts.setOnLoadCallback(drawLineChartplease);
 
 function drawLineChartplease() {
   drawLineChartGeneric('AAUGraphSES',AAUGraphSESStruct,'aau_graph')
+  //drawLineChartGeneric('WapData',wap1dataStruct,'wap1data')
 }
 
 function drawLineChartGeneric(parser,genStruct,ElementId) {
@@ -32,6 +58,8 @@ function drawLineChartGeneric(parser,genStruct,ElementId) {
     .then(response => response.json())
     .then(info => {
       var chart = new google.charts.Line(document.getElementById(ElementId));
+	  //var chart = new google.charts.LineChart(document.getElementById(ElementId));
+	  //var chart = new google.visualization.LineChart(document.getElementById(ElementId));
       var data = new google.visualization.DataTable();
       var rows = new Array();
       var columnLength = 0
@@ -46,7 +74,8 @@ function drawLineChartGeneric(parser,genStruct,ElementId) {
       if(info){
         for (var root of info) {
           for (key of Object.keys(root)) {
-            for (index in root[key]) {
+            for (index in root[key]) {				
+			  //console.log(root[key][index])
               rows.push(AddRowsToTableBasedOnGenericStructAndOneDeepJson(genStruct, root[key][index]))
             }
           }
@@ -57,16 +86,21 @@ function drawLineChartGeneric(parser,genStruct,ElementId) {
             title: parser,
             subtitle: 'over 10k'
           },
-          width: '100%', height: columnLength*50
+		  //legend:{position: 'bottom', alignment:'start'},
+          width: '100%', height: columnLength*60
         };
         options.series = CreateSeriesFromGenStruct(genStruct)
-        options.vAxes = CreateVaxesFromGenStruct(genStruct)
+        //options.vAxes = CreateVaxesFromGenStruct(genStruct)
         // before you pass the options to the drawing function
         options.explorer = {
-          actions: ['dragToZoom', 'rightClickToReset']
+          actions: ['dragToZoom', 'rightClickToReset'],
+		  axis: 'horizontal',
+		  keepInBounds: true,
+		  maxZoomIn: 4.0
           /* you can add more options */
         }
         chart.draw(data, google.charts.Line.convertOptions(options));
+		//chart.draw(data,options)
       }
   });
 }

@@ -1,5 +1,5 @@
 <!--Load the AJAX API-->
-var el = document.getElementById("Refresh")
+var el = document.getElementById("DeepDive")
 if(el){
     el.addEventListener("click", drawtimelineChart);
 }
@@ -11,7 +11,8 @@ google.charts.setOnLoadCallback(drawtimelineChart);
 function drawtimelineChart() {
 
   var airline = document.getElementById("Airline").value
-    var parser = document.getElementById("Parser").value
+    //var parser = document.getElementById("Parser").value
+	var parser = 'FPMfastSES'
     var date = document.getElementById("Date").value
     var tail = document.getElementById("Tail").value
     fetch('http://localhost:8080/mongoData?Airline='+airline+'&Parser='+parser+
@@ -59,7 +60,7 @@ function drawtimelineChart() {
 //this creates a table from a flat json
 function drawIT() {
   //fetch('http://localhost:8080/mongoData?Airline=SPIRIT&Parser=SWVersionsSES&TailId=N674NK&FlightId=.*&DateYYYYMMDD=2021030')
-  fetch('http://localhost:8080/mongoData?Airline=SPIRIT&Parser=FPMfastSES&TailId=N661NK&FlightId=.*&DateYYYYMMDD=202103')
+  fetch('http://localhost:8080/mongoData?Airline=SPIRIT&Parser=FPMfastSES&TailId='+tail+'&FlightId=.*&DateYYYYMMDD='+date)
     .then(response => response.json())
   .then(info => {
     //console.log(info)

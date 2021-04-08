@@ -7,7 +7,7 @@ if(el){
 }
 if(dd){
     //el.addEventListener("click", drawTableForDeepDive);
-    el.addEventListener("click", drawTableForDeepDive);
+    dd.addEventListener("click", drawTableForDeepDive);
 }
 //The generic table sturct but be and array of 2d arrays
 //index 0 is type
@@ -36,17 +36,27 @@ var FleetHealthStruct = [
     ['number', 'Flights'],
     ['number', 'RebootsInAir']
 ]
+
+var SWVersionsStruct = [
+	['string', 'TailId'],
+	['datetime', 'Landing'],
+    ['string', 'ConnVMSWVersion'],
+    ['string', 'ConnVMSWVKaConfig'],
+    ['string', 'ModemSWVer'],
+    ['string', 'WAP1SoftwareVersion']
+]
 var FPMFastStruct = [
   ['datetime', 'startof10k'],
   ['datetime', 'endof10k'],
   ['number', 'timeabove10k'],
   ['string', 'departure'],
-  ['string', 'departure'],
+  ['string', 'destination'],
   ['string', 'flightid'],
   ['number', 'internetstatus10k'],
   ['number', 'intranetstatus10k'],
   ['number', 'rxtotal'],
-  ['number', 'txtotal']
+  ['number', 'txtotal'],
+  ['number', 'rebootsinair']
 ]
 
 google.charts.load('current', {'packages':['table']});
@@ -79,7 +89,16 @@ function drawTableForFleetHealth() {
     tail: ".*",
     flightId: ".*"
   }
+   var InfoForSWVersionsSES = {
+    url: "SWVersionsSES",
+    airline: document.getElementById("Airline").value,
+    date: document.getElementById("Date").value,
+    tail: ".*",
+    flightId: ".*"
+  }
   drawTableGeneric('FleetHealth',FleetHealthStruct,'fpm_table',InfoForFleetHealth)
+  drawTableGeneric('SWVersionsSES',SWVersionsStruct,'software_table',InfoForSWVersionsSES)
+
 }
 
 function drawTableGeneric(parser,genStruct,ElementId,QueryInfo) {
@@ -108,21 +127,20 @@ function drawTableGeneric(parser,genStruct,ElementId,QueryInfo) {
               rows.push(AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, key))
             }
           } else if (parser === "FleetHealth"){
-              links.add(key['TailId'])
+              //links.add(key['TailId'])
               rows.push(AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, key))
           } else {
             rows.push(AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, key))
           }
         }
-        if (parser === "FPMfastSES") {
+        /*if (parser === "FPMfastSES") {
           addOptionsToSelect(flightIds, 'FlightId')
         } else if (parser === "FleetHealth"){
           var arrayOfOptions = [... links]
           for(index in arrayOfOptions) {
-            addAnchor('deep', arrayOfOptions[index], 'deep?Tail=' + arrayOfOptions[index])
-
+            addAnchor('deep', arrayOfOptions[index], 'deep?Airline=' + QueryInfo.airline + '&Tail=' + arrayOfOptions[index])
           }
-        }
+        }*/
         if (rows.length > 0) {
           rows.sort(sortFunction);
           data.addRows(rows);
@@ -146,7 +164,7 @@ function addOptionsToSelect(setOfOptions, selectId) {
   for(index in arrayOfOptions) {
       select.options[select.options.length] = new Option(arrayOfOptions[index], arrayOfOptions[index]);
   }
-  console.log(currentSelection)
+  //console.log(currentSelection)
   if (arrayOfOptions.includes(currentSelection)) {
     select.options[select.options.length] = new Option(currentSelection, currentSelection);
   }
@@ -164,6 +182,8 @@ function AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, flatJson) {
   var row = new Array();
   for (index in genStruct) {
     if (genStruct[index][0] === 'datetime') {
+      //var newData = new Date(flatJson[genStruct[index][1]])
+      //var utcDate = new Data(newData.getFullYear(),newData.getMonth(),newData.getDate(),newData.getHours(),newData.getMinutes(),newData.getSeconds(),newData.getMilliseconds())
       row.push(new Date(flatJson[genStruct[index][1]]))
     } else if (genStruct[index][0] === 'number') {
       row.push(Number(flatJson[genStruct[index][1]]))
