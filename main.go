@@ -9,6 +9,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -24,8 +25,9 @@ func main() {
 	http.Handle("/home", http.HandlerFunc(ServeMainPage))
 	http.Handle("/TailHealth", http.HandlerFunc(ServeTailHealth))
 	http.Handle("/singleFlightAnalysis", http.HandlerFunc(ServeDeepDive))
-
+	http.Handle("/UserCntPerFlight", http.HandlerFunc(UserCntPerFlightOnDateRgx))
 	http.Handle("/FlightIDs", http.HandlerFunc(FlightIDs))
+	http.Handle("/UserIDs", http.HandlerFunc(UserIDs))
 	http.Handle("/FleetHealth", http.HandlerFunc(FleetHealthAirline))
 	http.Handle("/SWVersionsSES", http.HandlerFunc(SWVersionsSES))
 	//http.Handle("/UsageFileCnt", http.HandlerFunc(UsageFileCnt))
@@ -109,7 +111,95 @@ func GetSWVersionsSESFromMongo(Airline string, Date string, ms *MgSession) []Sof
 	return versions
 
 }
+func UserCntPerFlightOnDateRgx(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "FPMfastSES"
+	Airline := ""
+	TailId := ""
+	DateYYYYMMDD := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	//defer ms.DisconnectFromMongo()
+	data := ms.FindRgxMatchInFPMfastSES(Airline + "_" + TailId + "_" + ".*" + "_" + DateYYYYMMDD)
+	ParserName = "UsageSummary"
+	ms = CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	UserCntPerFlights := []UserCntPerFlight{}
+	for _, fpmfastses := range data {
+		if fpmfastses.Above10k {
+			searcher := Airline + "_" + TailId + "_" + GetFlightIdAndDateFromFileName(fpmfastses.FileName)
+			//fmt.Println("Getting UserCntPerFlights with", searcher)
+			UserCnt := ms.FindRgxMatchInCollectionAndReturnCntOfDocs(searcher)
+			currentFlight := UserCntPerFlight{
+				TakeOff:      fpmfastses.TakeOff,
+				FlightId:     fpmfastses.FlightID,
+				FlightIdUniq: GetFlightIdAndDateFromFileName(fpmfastses.FileName),
+				UserCnt:      UserCnt,
+			}
+			UserCntPerFlights = append(UserCntPerFlights, currentFlight)
+		}
+	}
 
+	enc := json.NewEncoder(res)
+	enc.Encode(UserCntPerFlights)
+
+	fmt.Println(req.Method, "Getting UserCntPerFlights")
+	fmt.Println(Airline + "_" + TailId + "_" + ".*" + "_" + DateYYYYMMDD)
+}
+
+type UserCntPerFlight struct {
+	TakeOff      string
+	FlightId     string
+	FlightIdUniq string
+	UserCnt      int
+}
+
+func UserIDs(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "UsageSummary"
+	Airline := ""
+	FlightId := ""
+	TailId := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "FlightId":
+				FlightId = value
+			case "TailId":
+				TailId = value
+			}
+
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := ms.FindRgxMatchInUsageSummary(Airline + "_" + TailId + "_" + FlightId)
+	UserIds := []string{}
+	for _, usagesummary := range data {
+		UserIds = append(UserIds, usagesummary.UserId)
+	}
+	enc := json.NewEncoder(res)
+	sort.Strings(UserIds)
+	enc.Encode(UserIds)
+
+	fmt.Println(req.Method, "Getting UserIds", FlightId)
+	fmt.Println(Airline + "_" + TailId + "_" + FlightId)
+}
 func FlightIDs(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	ParserName := "FPMfastSES"
@@ -137,10 +227,12 @@ func FlightIDs(res http.ResponseWriter, req *http.Request) {
 	}
 	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
 	defer ms.DisconnectFromMongo()
-	data := ms.FindRgxMatchInSoftwareVersionsSES(Airline + "_" + TailId + "_" + ".*" + "_" + DateYYYYMMDD)
+	data := ms.FindRgxMatchInFPMfastSES(Airline + "_" + TailId + "_" + ".*" + "_" + DateYYYYMMDD)
 	fligthIds := []string{}
 	for _, fpmfastses := range data {
-		fligthIds = append(fligthIds, GetFlightIdAndDateFromFileName(fpmfastses.FileName))
+		if fpmfastses.Above10k {
+			fligthIds = append(fligthIds, GetFlightIdAndDateFromFileName(fpmfastses.FileName))
+		}
 	}
 	enc := json.NewEncoder(res)
 	enc.Encode(fligthIds)
@@ -191,6 +283,7 @@ type InterScores struct {
 	Intranetstatus10k float64
 	Flights           int
 	RebootsInAir      int
+	Users             int
 }
 
 func (I *InterScores) UpdateScores(Internetstatus10k float64, Intranetstatus10k float64, RebootsInAir int) {
@@ -206,6 +299,7 @@ func (I *InterScores) CalculateScores() {
 
 func GetFPMfastSESFromMongo(Airline string, Date string, ms *MgSession) []InterScores {
 	data := ms.FindRgxMatchInFPMfastSES(Airline + "_" + ".*" + "_" + ".*" + "_" + Date)
+	ms.ConnectToCollection("UsageSummary")
 	scoreMap := make(map[string]InterScores)
 	for _, score := range data {
 		if score.Above10k {
@@ -213,11 +307,14 @@ func GetFPMfastSESFromMongo(Airline string, Date string, ms *MgSession) []InterS
 				interScore.UpdateScores(score.InternetStatus10k, score.IntranetStatus10k, score.RebootsInAir)
 				scoreMap[score.TailId] = interScore
 			} else {
+
+				UserCnt := ms.FindRgxMatchInCollectionAndReturnCntOfDocs(Airline + "_" + score.TailId + "_" + ".*" + "_" + Date)
 				firstScore := InterScores{
 					TailId:            score.TailId,
 					Internetstatus10k: score.InternetStatus10k,
 					Intranetstatus10k: score.IntranetStatus10k,
 					Flights:           1,
+					Users:             UserCnt,
 				}
 				scoreMap[score.TailId] = firstScore
 			}
@@ -231,7 +328,9 @@ func GetFPMfastSESFromMongo(Airline string, Date string, ms *MgSession) []InterS
 	}
 	return scores
 }
+func GetUserSummaryCountForCurrentRgx(rgx string) {
 
+}
 func mongoData(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	ParserName := ""

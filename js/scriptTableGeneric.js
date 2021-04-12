@@ -34,7 +34,8 @@ var FleetHealthStruct = [
     ['number', 'Internetstatus10k'],
     ['number', 'Intranetstatus10k'],
     ['number', 'Flights'],
-    ['number', 'RebootsInAir']
+    ['number', 'RebootsInAir'],
+    ['number', 'Users']
 ]
 
 var SWVersionsStruct = [
