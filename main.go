@@ -30,6 +30,7 @@ func main() {
 	http.Handle("/UserIDs", http.HandlerFunc(UserIDs))
 	http.Handle("/FleetHealth", http.HandlerFunc(FleetHealthAirline))
 	http.Handle("/SWVersionsSES", http.HandlerFunc(SWVersionsSES))
+	http.Handle("/ParsedFilenames", http.HandlerFunc(ParsedFilenames))
 	//http.Handle("/UsageFileCnt", http.HandlerFunc(UsageFileCnt))
 	//http.Handle("/rtnJson", http.HandlerFunc(rtnJson))
 	//http.Handle("/rtnLineJson", http.HandlerFunc(rtnLineJson))
@@ -166,6 +167,32 @@ type UserCntPerFlight struct {
 	UserCnt      int
 }
 
+func ParsedFilenames(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "FPMfastSES"
+	Airline := ""
+	//FlightId := ""
+	TailId := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			}
+
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := ms.GetParsedFilenames(Airline + "_" + TailId)
+	for _, filename := range data {
+		fmt.Println(filename)
+	}
+	//UserIds := []string{}
+}
 func UserIDs(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	ParserName := "UsageSummary"

@@ -2,6 +2,8 @@ google.charts.load('current', {'packages':['corechart']});
 google.charts.load('current', {'packages':['line']});
 google.charts.load('current', {'packages':['table']});
 google.charts.load('current', {'packages':['timeline']});
+var webserver = 'http://MLB-M4244:8080/'
+//var webserver = 'http://localhost:8080/'
 var UsageSummaryStruct = [
   ['datetime', 'registrationrec'],
   ['string', 'flightid'],
@@ -286,7 +288,7 @@ function DeepDive(UrlParamaters){
   /*getDeepDiveDataSpecificParser2(InfoForWapData,WapDataStruct,'wap_data')*/
 }
 function getFlightIds(QueryInfo) {
-  fetch('http://localhost:8080/'+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
   '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
     .then(info => {
@@ -300,7 +302,7 @@ function getFlightIds(QueryInfo) {
     });
 }
 function getUserIds(QueryInfo) {
-  fetch('http://localhost:8080/'+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
   '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
     .then(info => {
@@ -314,7 +316,7 @@ function getUserIds(QueryInfo) {
     });
 }
 function getUserCntPerFlight(QueryInfo,CollectionStruct,GraphHtmlId){
-  fetch('http://localhost:8080/'+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
   '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
     .then(info => {
@@ -323,7 +325,7 @@ function getUserCntPerFlight(QueryInfo,CollectionStruct,GraphHtmlId){
     });
 }
 function getDeepDiveDataSpecificParser2(QueryInfo,CollectionStruct,GraphHtmlId) {
-  fetch('http://localhost:8080/'+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
   '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
     .then(info => {
@@ -332,7 +334,7 @@ function getDeepDiveDataSpecificParser2(QueryInfo,CollectionStruct,GraphHtmlId) 
     });
 }
 function getDeepDiveDataSpecificParserChart(QueryInfo,CollectionStruct,GraphHtmlId) {
-  fetch('http://localhost:8080/'+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
   '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
     .then(info => {
@@ -341,7 +343,7 @@ function getDeepDiveDataSpecificParserChart(QueryInfo,CollectionStruct,GraphHtml
     });
 }
 function getTailHealthFPMfastSES(QueryInfo) {
-  fetch('http://localhost:8080/'+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
   '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
     .then(info => {
@@ -354,7 +356,7 @@ function getTailHealthFPMfastSES(QueryInfo) {
     });
 }
 function getDeepDiveFPMfastSES(QueryInfo) {
-  fetch('http://localhost:8080/'+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
   '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
     .then(info => {
@@ -363,7 +365,7 @@ function getDeepDiveFPMfastSES(QueryInfo) {
     });
   }
 function getDeepDiveDataUsageSummary(QueryInfo) {
-  fetch('http://localhost:8080/'+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
   '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
     .then(info => {
@@ -374,7 +376,7 @@ function getDeepDiveDataUsageSummary(QueryInfo) {
     });
 }
 function getDeepDiveDataUsageDetails(QueryInfo) {
-  fetch('http://localhost:8080/'+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
   '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
     .then(info => {
@@ -383,7 +385,7 @@ function getDeepDiveDataUsageDetails(QueryInfo) {
     });
 }
 function getDeepDiveDataUdptraceSummary(QueryInfo) {
-  fetch('http://localhost:8080/'+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
   '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
     .then(info => {
@@ -394,7 +396,7 @@ function getDeepDiveDataUdptraceSummary(QueryInfo) {
     });
 }
 function getDeepDiveDataUdptraceDetails(QueryInfo) {
-  fetch('http://localhost:8080/'+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
   '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
     .then(info => {

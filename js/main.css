@@ -1,0 +1,197 @@
+/* { margin: 5px; }
+
+/* This s a css comment */
+header {
+    width: 100%;
+    height: 100px;
+    background-color: red;
+}
+
+
+.logo{
+  /*border: 50px;*/
+  display: block;
+  width:310px;
+  height: auto;
+  /*position:absolute;*/
+  top:180px;
+  left:140px;
+  right:0;
+  margin:auto;
+}
+
+.customer_logo {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  /*top:180px;*/
+}
+
+.menu {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  /*display: block;*/
+  transition: 0.3s;
+  line-height: 1.7;
+}
+
+.refresh {
+  background: none!important;
+  border: none;
+  /*padding: 0!important;*/
+  padding: 8px 8px 8px 32px;
+  font-family: "Times New Roman", Times, serif;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  /*display: block;*/
+  transition: 0.3s;
+  line-height: 1.7;
+  cursor: pointer;
+}
+
+.maindash{
+	width:100%;
+	margin: auto;
+}
+
+.dashboard {
+  border-radius: 25px;
+  width: 20%;
+  background: #9DCFF1;
+  padding: 20px; 
+  width: 200px;
+  height: 100px;
+  font-family: "Times New Roman", Times, serif, bold;
+  font-size: 35px;
+  color: #EBF5F3;
+  text-align: center;
+  margin: 20px;
+}
+
+.center {
+  text-align: center;
+}
+
+.refreshbutton {
+   background-color: #bbb;
+  padding: .5em;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 6px;
+  color: #fff;
+  font-family: "Times New Roman", Times, serif, bold;
+  font-size: 20px;
+  text-decoration: none;
+  border: none;
+}
+
+
+/* The side navigation menu */
+.sidenav {
+  height: 100%; /* 100% Full-height */
+  width: 0; /* 0 width - change this with JavaScript */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Stay on top */
+  top: 0; /* Stay at the top */
+  left: 0;
+  background-color: #111; /* Black*/
+  overflow-x: hidden; /* Disable horizontal scroll */
+  padding-top: 60px; /* Place content 60px from the top */
+  transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+}
+
+/* The navigation menu links */
+.sidenav a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+/* When you mouse over the navigation links, change their color */
+.sidenav a:hover  {
+  color: #f1f1f1;
+}
+.menu:hover  {
+  color: #f1f1f1;
+}
+.refresh:hover  {
+  color: #f1f1f1;
+}
+
+.refreshbutton:hover  {
+   border: none;
+   background: orange;
+   box-shadow: 0px 0px 1px #777;
+}
+
+
+/* Position and style the close button (top right corner) */
+.sidenav .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}
+
+/* Style page content - use this if you want to push the page content to the right when you open the side navigation */
+#main {
+  transition: margin-left .5s;
+  padding: 20px;
+}
+
+/* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+@media screen and (max-height: 450px) {
+  .sidenav {padding-top: 15px;}
+  .sidenav a {font-size: 18px;}
+}
+
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+.account-action {
+    /*background: #f0f0f2;
+    border-top: 1px solid #c6c7cc;
+    padding: 10px;*/
+}
+
+span{
+  top: 10;
+  /*right: 25px;*/
+  margin-left: 0px;
+}
+
+section {
+    width: 100%;
+    height: 200px;
+    background-color: blue;
+}
+
+
+aside, footer {
+    width: 100%;
+    height: 100px;
+    background-color: green;
+}
+
+
+}

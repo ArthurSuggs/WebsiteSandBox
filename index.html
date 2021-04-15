@@ -5,23 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Fleet Health</title>
+  <link rel="stylesheet" href="main.css">
+  
   <script src="loader.js"></script>
   <script src="common.js"></script>
 </head>
-<body style="background-color:Orange;">
-  <label for="Airline">Airline</label><br>
-  <select id="Airline" name="Airline">
+<body style="background-color:#white;" onload="getLogo(document.getElementById('Airline').value)">
+
+<!-- Start of sidenav menu -->
+  <div id="mySidenav" class="sidenav">
+  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+
+  <label class="menu" for="Airline" >Airline</label>
+  <select name="Airline" id="Airline" onChange="getLogo(this.value);">
   <option value="SPIRIT">SPIRIT</option>
+  <option value="UNITED">UNITED</option>
   </select><br>
-    <label for="Date">Date</label><br>
+    <label class="menu" for="Date">Date</label>
   <input type=text id="Date" name="Date" value="202104"><br>
-  <button id="Refresh">Refresh</button><br>
+  <!--<label class="menu" for="refres" >Refresh</label>-->
+  <button class="refresh" id="Refresh">Refresh</button><br>
+  
+  
   <a id="TailHealthAnchor" href="TailHealth">TailHealth</a>
   <a id="singleFlightAnalysisAnchor" href="singleFlightAnalysis">deepDive</a>
+  
+  </div>
+  <!-- End of sidenav menu -->
 
-  <div id=">FleetHealth"></div>
-  <div id="fpm_table"></div><br>
-  <div id="software_table"></div>
-  <script src="scriptTableGeneric.js"></script>
+
+  
+   <!-- Add all page content inside this div if you want the side nav to push page content to the right  -->
+  <div id="main">
+      
+	<img src="thales_logo.jpg" alt="Parser_Logo" class="logo">
+	<img  id="customer_logo" name="customer_logo" height="120" class="customer_logo">
+	    <p></p>
+    <!-- Use any element to open the sidenav -->
+    <span style="font-size:25px;cursor:pointer" onclick="openNav()">&#9776; Menu </span>
+		<script>
+		
+		function getLogo(value) {
+
+			var airline = value;
+			var img = document.getElementById("customer_logo");
+			//img.src = 'img/'+ airline +'.jpg';
+			img.src = airline +'.jpg';
+		}
+		
+		</script>
+		
+		  <div id=">FleetHealth"></div>
+		  <div id="fpm_table"></div><br>
+		  <div id="software_table"></div>
+		  <script src="scriptTableGeneric.js"></script>
+		
+  </div>
+   <!--end of Main Content page-->
+   
+   
+    <script>
+  /* Set the width of the side navigation to 250px */
+  function openNav() {
+    document.getElementById("mySidenav").style.width = "300px";
+    document.getElementById("main").style.marginLeft = "300px";
+  }
+  /* Set the width of the side navigation to 0 */
+  function closeNav() {
+    document.getElementById("mySidenav").style.width = "0";
+    document.getElementById("main").style.marginLeft= "0";
+  }
+  openNav();
+  </script>
 </body>
 </html>

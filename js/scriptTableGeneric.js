@@ -1,4 +1,6 @@
 <!--Load the AJAX API-->DeepDive
+var webserver = 'http://MLB-M4244:8080/'
+//var webserver = 'http://localhost:8080/'
 var el = document.getElementById("Refresh")
 var dd = document.getElementById("DeepDive")
 if(el){
@@ -105,7 +107,7 @@ function drawTableForFleetHealth() {
 function drawTableGeneric(parser,genStruct,ElementId,QueryInfo) {
   /*document.getElementById(ElementId).remove();
   addElement('div1',ElementId)*/
-    fetch('http://localhost:8080/'+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+parser+
+    fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+parser+
     '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
       .then(response => response.json())
     .then(info => {

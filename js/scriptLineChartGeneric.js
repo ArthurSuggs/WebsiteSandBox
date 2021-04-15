@@ -1,4 +1,5 @@
-<!--Load the AJAX API-->
+var webserver = 'http://MLB-M4244:8080/'
+//var webserver = 'http://localhost:8080/'
 var el = document.getElementById("DeepDive")
 if(el){
     el.addEventListener("click", drawLineChartplease);
@@ -53,7 +54,7 @@ function drawLineChartGeneric(parser,genStruct,ElementId) {
   var date = document.getElementById("Date").value
   var tail = document.getElementById("Tail").value
   var flightId = document.getElementById("FlightId").value
-  fetch('http://localhost:8080/mongoData?Airline='+airline+'&Parser='+parser+
+  fetch(webserver+'mongoData?Airline='+airline+'&Parser='+parser+
   '&TailId='+tail+'&FlightId='+flightId+'&DateYYYYMMDD='+date)
     .then(response => response.json())
     .then(info => {

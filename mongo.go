@@ -168,3 +168,15 @@ func (m *MgSession) FindStuffInCollection(FileName string) []interface{} {
 	}
 	return res
 }
+func (m *MgSession) GetParsedFilenames(rgx string) []interface{} {
+	var res []interface{}
+	col := m.Collection
+	query := bson.M{"filename": bson.RegEx{Pattern: rgx, Options: "i"}}
+	err := col.Find(query).Select(bson.M{"filename": 1, "_id": 0}).All(&res)
+	if nil != err {
+		fmt.Println(err)
+	}
+	return res
+}
+
+//m.Collection.Find(bson.M{"filename": bson.RegEx{Pattern: rgx,Options: "i",},}).All(&res)
