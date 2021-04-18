@@ -320,6 +320,34 @@ func (res SignalByFlightResults) ResultToCsv() string {
 	return csvString
 }
 
+type UsageDetails struct {
+	Time  string
+	WANRx int
+	WANTx int
+	LANRx int
+	LANTx int
+}
+type UsageDetailsResults struct {
+	FileName     string
+	UsageDetails []UsageDetails
+}
+
+func (res UsageDetailsResults) ResultToJson() string {
+	out, err := json.Marshal(res)
+	if err != nil {
+		panic(err)
+	}
+	return string(out)
+}
+func (res UsageDetailsResults) ResultToCsv() string {
+	v := reflect.ValueOf(res)
+	var csvString string
+	for i := 0; i < v.NumField(); i++ {
+		csvString = fmt.Sprintf("%v%v,", csvString, v.Field(i).Interface())
+	}
+	return csvString
+}
+
 type UsageSummaryResults struct {
 	FileName        string
 	TailId          string
@@ -389,12 +417,12 @@ func (res EngLogSummaryResults) ResultToCsv() string {
 
 type UdpTraceSummaryResults struct {
 	FileName                string
-	AvgEsno                 string
-	TermState000            string
-	TermStateNot000         string
-	Connected               string
-	Disconnected            string
-	Degraded                string
+	AvgEsno                 float64
+	TermState000            float64
+	TermStateNot000         float64
+	Connected               float64
+	Disconnected            float64
+	Degraded                float64
 	OutOfCoverageSeconds    int
 	SecondsInOtherTermState string
 	//SecondsInOtherTermState string
@@ -611,10 +639,10 @@ func (res ProcessCrashResults) ResultToCsv() string {
 
 type WAPData struct {
 	CurrentTime    string
-	Days_Active    int64
-	Hours_Active   int64
-	Minutes_Active int64
-	Seconds_Active int64
+	Days_Active    float64
+	Hours_Active   float64
+	Minutes_Active float64
+	Seconds_Active float64
 	Bytes_Sent     float64
 	Bytes_Received float64
 }

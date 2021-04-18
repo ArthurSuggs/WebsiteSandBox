@@ -25,11 +25,15 @@ func main() {
 	http.Handle("/home", http.HandlerFunc(ServeMainPage))
 	http.Handle("/TailHealth", http.HandlerFunc(ServeTailHealth))
 	http.Handle("/singleFlightAnalysis", http.HandlerFunc(ServeDeepDive))
+	http.Handle("/UserAnalysis", http.HandlerFunc(UserAnalysis))
 	http.Handle("/UserCntPerFlight", http.HandlerFunc(UserCntPerFlightOnDateRgx))
 	http.Handle("/FlightIDs", http.HandlerFunc(FlightIDs))
 	http.Handle("/UserIDs", http.HandlerFunc(UserIDs))
+	http.Handle("/TailIDs", http.HandlerFunc(TailIDs))
 	http.Handle("/FleetHealth", http.HandlerFunc(FleetHealthAirline))
-	http.Handle("/SWVersionsSES", http.HandlerFunc(SWVersionsSES))
+	http.Handle("/SWVersions", http.HandlerFunc(SWVersions))
+	//http.Handle("/SWVersionsSES", http.HandlerFunc(SWVersionsSES))
+	http.Handle("/FPMfastSESandUDPTrace", http.HandlerFunc(FPMfastSESandUDPTrace))
 	http.Handle("/ParsedFilenames", http.HandlerFunc(ParsedFilenames))
 	//http.Handle("/UsageFileCnt", http.HandlerFunc(UsageFileCnt))
 	//http.Handle("/rtnJson", http.HandlerFunc(rtnJson))
@@ -62,10 +66,142 @@ func ServeDeepDive(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
+	/*http.SetCookie(res, &http.Cookie{
+		Name:  "my-cookie",
+		Value: "some value",
+		Path:  "/",
+	})*/
 	tpl.ExecuteTemplate(res, "singleFlightAnalysis.html", nil)
 }
-func SWVersionsSES(res http.ResponseWriter, req *http.Request) {
+func UserAnalysis(res http.ResponseWriter, req *http.Request) {
+	err := req.ParseForm()
+	if err != nil {
+		fmt.Println(err)
+	}
+	tpl.ExecuteTemplate(res, "UserAnalysis.html", nil)
+}
+func FPMfastSESandUDPTrace(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "FPMfastSES"
+	Airline := ""
+	TailId := ""
+	DateYYYYMMDD := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := GetFPMfastSESandUDPTraceFromMongo(Airline, TailId, DateYYYYMMDD, ms)
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+
+	fmt.Println(req.Method, "FPMfastSESandUDPTrace with Airline:", Airline, "ParserName", ParserName)
+	fmt.Println(Airline + "_" + ".*" + "_" + ".*" + "_" + DateYYYYMMDD)
+}
+
+type FPMfastUdpTraceSummary struct {
+	Departure         string
+	Destination       string
+	FlightID          string
+	StartOf10K        string
+	EndOf10K          string
+	TimeAbove10K      string
+	InternetStatus10k float64
+	IntranetStatus10k float64
+	RxTotal           string
+	TxTotal           string
+	UserCnt           int
+	RebootsInAir      int
+	Above10k          bool
+	AvgEsno           float64
+	TermState000      float64
+	TermStateNot000   float64
+	Connected         float64
+	Disconnected      float64
+	Degraded          float64
+}
+
+func GetFPMfastSESandUDPTraceFromMongo(Airline string, TailId string, DateYYYYMMDD string, ms *MgSession) []FPMfastUdpTraceSummary {
+	FPMfastSESdata := ms.FindRgxMatchInFPMfastSES(Airline + "_" + TailId + "_" + ".*" + "_" + DateYYYYMMDD)
+	ParserName := "UdpTraceSummary"
+	ms = CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	UdpTraceSummarydata := ms.FindRgxMatchInUdpTraceSummary(Airline + "_" + TailId + "_" + ".*" + "_" + DateYYYYMMDD)
+	FPMfastSESandUDPTrace := []FPMfastUdpTraceSummary{}
+	ParserName = "UsageSummary"
+	ms = CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+
+	for _, fpmfastses := range FPMfastSESdata {
+		if fpmfastses.Above10k {
+			searcher := Airline + "_" + TailId + "_" + GetFlightIdAndDateFromFileName(fpmfastses.FileName)
+			//Find matching UDPtrace log and get count of users from UsageSummary collections
+			matchedUdptrace := false
+			for _, UDPtracelog := range UdpTraceSummarydata {
+				if strings.Contains(UDPtracelog.FileName, searcher) {
+					matchedUdptrace = true
+					currentFlight := FPMfastUdpTraceSummary{
+						Departure:         fpmfastses.Departure,
+						Destination:       fpmfastses.Destination,
+						FlightID:          fpmfastses.FlightID,
+						StartOf10K:        fpmfastses.StartOf10K,
+						EndOf10K:          fpmfastses.EndOf10K,
+						TimeAbove10K:      fpmfastses.TimeAbove10K,
+						InternetStatus10k: fpmfastses.InternetStatus10k,
+						IntranetStatus10k: fpmfastses.IntranetStatus10k,
+						RxTotal:           fpmfastses.RxTotal,
+						TxTotal:           fpmfastses.TxTotal,
+						UserCnt:           ms.FindRgxMatchInCollectionAndReturnCntOfDocs(searcher),
+						RebootsInAir:      fpmfastses.RebootsInAir,
+						Above10k:          fpmfastses.Above10k,
+						AvgEsno:           UDPtracelog.AvgEsno,
+						TermState000:      UDPtracelog.TermState000,
+						TermStateNot000:   UDPtracelog.TermStateNot000,
+						Connected:         UDPtracelog.Connected,
+						Disconnected:      UDPtracelog.Disconnected,
+						Degraded:          UDPtracelog.Degraded,
+					}
+					FPMfastSESandUDPTrace = append(FPMfastSESandUDPTrace, currentFlight)
+				}
+			}
+			if !matchedUdptrace {
+				currentFlight := FPMfastUdpTraceSummary{
+					Departure:         fpmfastses.Departure,
+					Destination:       fpmfastses.Destination,
+					FlightID:          fpmfastses.FlightID,
+					StartOf10K:        fpmfastses.StartOf10K,
+					EndOf10K:          fpmfastses.EndOf10K,
+					TimeAbove10K:      fpmfastses.TimeAbove10K,
+					InternetStatus10k: fpmfastses.InternetStatus10k,
+					IntranetStatus10k: fpmfastses.IntranetStatus10k,
+					RxTotal:           fpmfastses.RxTotal,
+					TxTotal:           fpmfastses.TxTotal,
+					UserCnt:           ms.FindRgxMatchInCollectionAndReturnCntOfDocs(searcher),
+					RebootsInAir:      fpmfastses.RebootsInAir,
+					Above10k:          fpmfastses.Above10k,
+					AvgEsno:           0,
+					TermState000:      0,
+					TermStateNot000:   0,
+					Connected:         0,
+					Disconnected:      0,
+					Degraded:          0,
+				}
+				FPMfastSESandUDPTrace = append(FPMfastSESandUDPTrace, currentFlight)
+			}
+		}
+	}
+	return FPMfastSESandUDPTrace
+}
+func SWVersions(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	ParserName := "SWVersionsSES"
 	Airline := ""
@@ -81,14 +217,47 @@ func SWVersionsSES(res http.ResponseWriter, req *http.Request) {
 			}
 		}
 	}
+	if Airline != "SPIRIT" {
+		ParserName = "SWVersions"
+	}
 	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
 	defer ms.DisconnectFromMongo()
-	data := GetSWVersionsSESFromMongo(Airline, DateYYYYMMDD, ms)
-	enc := json.NewEncoder(res)
-	enc.Encode(data)
 
-	fmt.Println(req.Method, "SWVersionsSES with Airline:", Airline, "ParserName", ParserName)
+	if Airline != "SPIRIT" {
+		data := GetSWVersionsFromMongo(Airline, DateYYYYMMDD, ms)
+		enc := json.NewEncoder(res)
+		enc.Encode(data)
+	} else {
+		data := GetSWVersionsSESFromMongo(Airline, DateYYYYMMDD, ms)
+		enc := json.NewEncoder(res)
+		enc.Encode(data)
+
+	}
+
+	fmt.Println(req.Method, "SWVersions with Airline:", Airline, "ParserName", ParserName)
 	fmt.Println(Airline + "_" + ".*" + "_" + ".*" + "_" + DateYYYYMMDD)
+}
+func GetSWVersionsFromMongo(Airline string, Date string, ms *MgSession) []SoftwareVersionLegacyResults {
+	data := ms.FindRgxMatchInSoftwareVersions(Airline + "_" + ".*" + "_" + ".*" + "_" + Date)
+	versionMap := make(map[string]SoftwareVersionLegacyResults)
+	for _, swVerions := range data {
+
+		TakeOff, _ := time.Parse("2006-01-02T15:04:05Z", swVerions.TakeOff)
+		if sw, ok := versionMap[swVerions.TailId]; ok {
+			highestDateSofar, _ := time.Parse("2006-01-02T15:04:05Z", sw.TakeOff)
+			if TakeOff.After(highestDateSofar) {
+				versionMap[sw.TailId] = sw
+			}
+		} else {
+			versionMap[swVerions.TailId] = swVerions
+		}
+	}
+	var versions []SoftwareVersionLegacyResults
+	for _, version := range versionMap {
+		versions = append(versions, version)
+	}
+	return versions
+
 }
 func GetSWVersionsSESFromMongo(Airline string, Date string, ms *MgSession) []SoftwareVersionSesResults {
 	data := ms.FindRgxMatchInSoftwareVersionsSES(Airline + "_" + ".*" + "_" + ".*" + "_" + Date)
@@ -193,6 +362,37 @@ func ParsedFilenames(res http.ResponseWriter, req *http.Request) {
 	}
 	//UserIds := []string{}
 }
+func TailIDs(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "FPMfastSES"
+	Airline := ""
+	DateYYYYMMDD := ""
+	//ConType := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	if Airline != "SPIRIT" {
+		ParserName = "FPMfast"
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	TailIds := ms.FindDistinctStringsFromRgxOnFilename(Airline+"_"+".*"+"_"+".*"+"_"+DateYYYYMMDD, "tailid")
+
+	enc := json.NewEncoder(res)
+	sort.Strings(TailIds)
+	enc.Encode(TailIds)
+
+	fmt.Println(req.Method, "Getting TailIds from", ParserName)
+	fmt.Println(Airline + "_" + ".*" + "_" + ".*" + "_" + DateYYYYMMDD)
+}
 func UserIDs(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	ParserName := "UsageSummary"
@@ -233,7 +433,6 @@ func FlightIDs(res http.ResponseWriter, req *http.Request) {
 	Airline := ""
 	TailId := ""
 	DateYYYYMMDD := ""
-	ConType := ""
 	for key, values := range req.Form {
 		for _, value := range values { // range over []string
 			fmt.Println(key, value)
@@ -244,12 +443,10 @@ func FlightIDs(res http.ResponseWriter, req *http.Request) {
 				TailId = value
 			case "DateYYYYMMDD":
 				DateYYYYMMDD = value
-			case "ConType":
-				ConType = value
 			}
 		}
 	}
-	if ConType == "Legacy" {
+	if Airline != "SPIRIT" {
 		ParserName = "FPMfast"
 	}
 	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
@@ -293,6 +490,9 @@ func FleetHealthAirline(res http.ResponseWriter, req *http.Request) {
 				DateYYYYMMDD = value
 			}
 		}
+	}
+	if Airline != "SPIRIT" {
+		ParserName = "FPMfast"
 	}
 	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
 	defer ms.DisconnectFromMongo()

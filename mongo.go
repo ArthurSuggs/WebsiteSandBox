@@ -124,6 +124,19 @@ func (m *MgSession) FindRgxMatchInFPMfastSES(rgx string) []SysevtResults {
 	}).All(&res))
 	return res
 }
+func (m *MgSession) FindDistinctStringsFromRgxOnFilename(rgx string, distinctId string) []string {
+	res := []string{}
+	err := m.Collection.Find(bson.M{
+		"filename": bson.RegEx{
+			Pattern: rgx,
+			Options: "i",
+		},
+	}).Distinct(distinctId, &res)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return res
+}
 
 func (m *MgSession) FindRgxMatchInCollectionAndReturnCntOfDocs(rgx string) int {
 	cnt, err := m.Collection.Find(bson.M{
@@ -147,6 +160,16 @@ func (m *MgSession) FindRgxMatchInSoftwareVersionsSES(rgx string) []SoftwareVers
 	}).All(&res)
 	return res
 }
+func (m *MgSession) FindRgxMatchInSoftwareVersions(rgx string) []SoftwareVersionLegacyResults {
+	var res []SoftwareVersionLegacyResults
+	m.Collection.Find(bson.M{
+		"filename": bson.RegEx{
+			Pattern: rgx,
+			Options: "i",
+		},
+	}).All(&res)
+	return res
+}
 func (m *MgSession) FindRgxMatchInUsageSummary(rgx string) []UsageSummaryResults {
 	var res []UsageSummaryResults
 	m.Collection.Find(bson.M{
@@ -157,7 +180,16 @@ func (m *MgSession) FindRgxMatchInUsageSummary(rgx string) []UsageSummaryResults
 	}).All(&res)
 	return res
 }
-
+func (m *MgSession) FindRgxMatchInUdpTraceSummary(rgx string) []UdpTraceSummaryResults {
+	var res []UdpTraceSummaryResults
+	m.Collection.Find(bson.M{
+		"filename": bson.RegEx{
+			Pattern: rgx,
+			Options: "i",
+		},
+	}).All(&res)
+	return res
+}
 func (m *MgSession) FindStuffInCollection(FileName string) []interface{} {
 	var res []interface{}
 	col := m.Collection

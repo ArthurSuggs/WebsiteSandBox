@@ -6,6 +6,31 @@ header {
     height: 100px;
     background-color: red;
 }
+/*piechart {
+  display:inline-block;
+  margin-right:10px;
+}*/
+#udptrace_pie_connected{
+  display:inline-block;margin-right:10px;
+}
+#udptrace_pie_term{
+  display:inline-block;
+}
+#udptrace_graph_rx{
+  height:100vh;
+}
+#udptrace_graph_tx{
+  height:100vh;
+}
+#usage_chart_wan{
+  height:100vh;
+}
+#usage_chart_lan{
+  height:100vh;
+}
+#usage_hist{
+  height:100vh;
+}
 
 
 .logo{
@@ -61,7 +86,7 @@ header {
   border-radius: 25px;
   width: 20%;
   background: #9DCFF1;
-  padding: 20px; 
+  padding: 20px;
   width: 200px;
   height: 100px;
   font-family: "Times New Roman", Times, serif, bold;

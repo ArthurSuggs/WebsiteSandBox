@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Fleet Health</title>
   <link rel="stylesheet" href="main.css">
-  
+
   <script src="loader.js"></script>
   <script src="common.js"></script>
 </head>
@@ -20,31 +20,32 @@
   <select name="Airline" id="Airline" onChange="getLogo(this.value);">
   <option value="SPIRIT">SPIRIT</option>
   <option value="UNITED">UNITED</option>
+  <option value="JETBLUE">JETBLUE</option>
   </select><br>
     <label class="menu" for="Date">Date</label>
   <input type=text id="Date" name="Date" value="202104"><br>
   <!--<label class="menu" for="refres" >Refresh</label>-->
   <button class="refresh" id="Refresh">Refresh</button><br>
-  
-  
+
+
   <a id="TailHealthAnchor" href="TailHealth">TailHealth</a>
   <a id="singleFlightAnalysisAnchor" href="singleFlightAnalysis">deepDive</a>
-  
+
   </div>
   <!-- End of sidenav menu -->
 
 
-  
+
    <!-- Add all page content inside this div if you want the side nav to push page content to the right  -->
   <div id="main">
-      
+
 	<img src="thales_logo.jpg" alt="Parser_Logo" class="logo">
 	<img  id="customer_logo" name="customer_logo" height="120" class="customer_logo">
 	    <p></p>
     <!-- Use any element to open the sidenav -->
     <span style="font-size:25px;cursor:pointer" onclick="openNav()">&#9776; Menu </span>
 		<script>
-		
+
 		function getLogo(value) {
 
 			var airline = value;
@@ -52,18 +53,18 @@
 			//img.src = 'img/'+ airline +'.jpg';
 			img.src = airline +'.jpg';
 		}
-		
+
 		</script>
-		
+
 		  <div id=">FleetHealth"></div>
 		  <div id="fpm_table"></div><br>
 		  <div id="software_table"></div>
-		  <script src="scriptTableGeneric.js"></script>
-		
+		  <script src="GrapherFh.js"></script>
+
   </div>
    <!--end of Main Content page-->
-   
-   
+
+
     <script>
   /* Set the width of the side navigation to 250px */
   function openNav() {
