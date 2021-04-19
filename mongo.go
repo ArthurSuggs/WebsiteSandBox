@@ -102,6 +102,16 @@ func (m *MgSession) FindAllInCollection(indexedName string, indexedValue string)
 	m.Collection.Find(bson.M{indexedName: indexedValue}).All(&result)
 	return result
 }
+func (m *MgSession) FindRgxMatchInDarkCollection(findid string, rgx string) []DarkAc {
+	var res []DarkAc
+	fmt.Println(m.Collection.Find(bson.M{
+		findid: bson.RegEx{
+			Pattern: rgx,
+			Options: "i",
+		},
+	}).All(&res))
+	return res
+}
 
 func (m *MgSession) FindRgxMatchInCollection(rgx string) []interface{} {
 	var res []interface{}

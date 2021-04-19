@@ -104,6 +104,17 @@ var SWVersionsStruct = [
     ['string', 'ModemSWVer'],
     ['string', 'WAP1SoftwareVersion']
 ]
+var DarkAircraftStruct = [
+  ['string', 'Tail'],
+  ['string', 'Type'],
+  ['string', 'Opened'],
+  ['string', 'Closed'],
+  ['string', 'Squawk'],
+  ['string', 'Mx_Action'],
+  ['string', 'Description'],
+  ['string', 'Root_Cause'],
+  ['string', 'Engineering_Notes']
+]
 var FPMFastStruct = [
   ['datetime', 'startof10k'],
   ['datetime', 'endof10k'],
@@ -237,6 +248,14 @@ function TailHealth(UrlParamaters) {
     flightId: '.*',
     parser: "UdpTraceSummary"
   }
+  var InfoForDarkAircraft= {
+    url: "DarkAircraft",
+    airline: document.getElementById("Airline").value,
+    date: formatDate(),
+    tail: document.getElementById("Tail").value,
+    flightId: '.*',
+    parser: ""
+  }
   getTailIds()
   if(InfoForTailHealthFPMfast.airline !== "SPIRIT"){
     InfoForTailHealthFPMfast.parser = "FPMfast"
@@ -244,6 +263,7 @@ function TailHealth(UrlParamaters) {
     getFPMFastUdpTrace(InfoForFPMfastSESandUDPTraceTailHealth,FPMFastUdpTraceStruct,"fpm_udptrace_table")
     getDeepDiveDataUdptraceSummary(InfoForUdpTraceSummaryTailHealth)
   }
+  getDarkAircraft(InfoForDarkAircraft)
   getTailHealthFPMfastSES(InfoForTailHealthFPMfast)
   getUserCntPerFlight(InfoForUserCntPerFlight,UsersPerFlightLineStruct,"")
 }
@@ -349,6 +369,15 @@ function DeepDive(UrlParamaters){
   //getDeepDiveDataSpecificParser has a dependency on the 1st arg having an options element
   getDeepDiveDataSpecificParserChart(InfoForAAUGraphSES,AAUGraphSESStruct,'aau_graph')
   /*getDeepDiveDataSpecificParser2(InfoForWapData,WapDataStruct,'wap_data')*/
+}
+function getDarkAircraft(QueryInfo) {
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
+    .then(response => response.json())
+    .then(info => {
+      console.log(info)
+      drawTableGeneric(QueryInfo.parser,DarkAircraftStruct,"dark_table",QueryInfo,info)
+    });
 }
 
 function getUserCntPerFlight(QueryInfo,CollectionStruct,GraphHtmlId){

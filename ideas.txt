@@ -1,0 +1,31 @@
+Overall
+-create filter for domestic and international
+
+New
+-Create city pair health
+-Create page so users can update the dark AC collection in mongo
+-Create anything goes (variable filters for all elements) Dark AC page
+
+
+FleetHealth
+-Histogram of dark AC tails
+-Histogram of dark AC RootCause
+-line graph of dark AC count per day
+
+TailHealth
+-Process crash cnt per flight
+-SWVersion per flight (MPS/MAP versions too)
+-LRU uptime per day
+
+Single Flight Analysis
+-Add timeline like Ashwins tool
+-Add lan ip graph
+-Noise analysis
+-WAP Data
+-DRM health (possible new page)
+
+Need to:
+Research more on Scatter Graphs
+Research vertical Bar Graphs
+Research updating from http to https
+Research securing API

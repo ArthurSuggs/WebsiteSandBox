@@ -30,6 +30,7 @@ func main() {
 	http.Handle("/FlightIDs", http.HandlerFunc(FlightIDs))
 	http.Handle("/UserIDs", http.HandlerFunc(UserIDs))
 	http.Handle("/TailIDs", http.HandlerFunc(TailIDs))
+	http.Handle("/DarkAircraft", http.HandlerFunc(DarkAircraft))
 	http.Handle("/FleetHealth", http.HandlerFunc(FleetHealthAirline))
 	http.Handle("/SWVersions", http.HandlerFunc(SWVersions))
 	//http.Handle("/SWVersionsSES", http.HandlerFunc(SWVersionsSES))
@@ -335,7 +336,63 @@ type UserCntPerFlight struct {
 	FlightIdUniq string
 	UserCnt      int
 }
+type DarkAc struct {
+	Tail              string
+	Type              string
+	Opened            string
+	Closed            string
+	Days              string
+	Squawk            string
+	Mx_Action         string
+	Description       string
+	REF               string
+	Main              string
+	LRU               string
+	Root_Cause        string
+	ODC_Root          string
+	Engineering_Notes string
+}
 
+func DarkAircraft(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "DarkSheet"
+	Airline := ""
+	//FlightId := ""
+	TailId := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			}
+
+		}
+	}
+
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	choppedTail := ""
+	//Need to translate from LTV tail to real tailNumber
+	if len(TailId) > 3 {
+		if Airline == "JETBLUE" {
+			choppedTail = TailId[1:4]
+		} else if Airline == "UNITED" {
+			choppedTail = TailId[len(TailId)-3:]
+		}
+
+	}
+	data := ms.FindRgxMatchInDarkCollection("tail", choppedTail)
+	fmt.Println(req.Method, "Getting DarkAircraft from", ParserName)
+	fmt.Println(Airline + "_" + ".*" + "_" + choppedTail)
+	for _, filename := range data {
+		fmt.Println(filename)
+	}
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+}
 func ParsedFilenames(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	ParserName := "FPMfastSES"
