@@ -33,6 +33,7 @@ func main() {
 	http.Handle("/DarkAircraft", http.HandlerFunc(DarkAircraft))
 	http.Handle("/FleetHealth", http.HandlerFunc(FleetHealthAirline))
 	http.Handle("/SWVersions", http.HandlerFunc(SWVersions))
+	http.Handle("/LogOffload", http.HandlerFunc(GetLogOffload))
 	//http.Handle("/SWVersionsSES", http.HandlerFunc(SWVersionsSES))
 	http.Handle("/FPMfastSESandUDPTrace", http.HandlerFunc(FPMfastSESandUDPTrace))
 	http.Handle("/ParsedFilenames", http.HandlerFunc(ParsedFilenames))
@@ -201,6 +202,46 @@ func GetFPMfastSESandUDPTraceFromMongo(Airline string, TailId string, DateYYYYMM
 		}
 	}
 	return FPMfastSESandUDPTrace
+}
+func GetLogOffload(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "LogOffload"
+	Airline := ""
+	TailId := ""
+	DateYYYYMMDD := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	OffloadedFiles := []string{}
+	data := ms.FindRgxMatchInLogOffload(Airline + "_" + TailId + "_" + ".*" + "_" + DateYYYYMMDD)
+	for _, lo := range data {
+		for _, loe := range lo.LogOffload {
+			if loe.Status == "Uploaded" {
+				if strings.Contains(loe.Name, "USAGE") {
+					fmt.Println(loe.Name)
+				}
+				OffloadedFiles = append(OffloadedFiles, loe.Name)
+			}
+		}
+	}
+	enc := json.NewEncoder(res)
+	enc.Encode(OffloadedFiles)
+
+	fmt.Println(req.Method, "LogOffload with Airline:", Airline, "TailId", TailId)
+	fmt.Println(Airline + "_" + TailId + "_" + ".*" + "_" + DateYYYYMMDD)
 }
 func SWVersions(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()

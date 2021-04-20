@@ -1,6 +1,6 @@
 <!--Load the AJAX API-->DeepDive
-//var webserver = 'http://MLB-M4244:8080/'
-var webserver = 'http://localhost:8080/'
+var webserver = 'http://MLB-M4244:8080/'
+//var webserver = 'http://localhost:8080/'
 var el = document.getElementById("Refresh")
 var dd = document.getElementById("DeepDive")
 if(el){

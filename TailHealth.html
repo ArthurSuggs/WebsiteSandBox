@@ -9,6 +9,7 @@
   <title>Tail Health</title>
   <link rel="stylesheet" href="main.css">
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <link rel="stylesheet" href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
 
 
   <style>
@@ -22,39 +23,64 @@
   <!-- <script src="mapInit.js"></script> -->
 	<!-- <script src="script.js"></script> -->
 </head>
-<body style="background-color:white;">
+<!--<body style="background-color:white;">-->
+<body style="background-image: url('cool-background.png'); background-repeat: no-repeat; background-size: 100%;" >
 <img src="thales_logo.jpg" alt="Parser_Logo" class="logo">
-  <label for="Airline">Airline</label><br>
-  <select type="text" id="Airline" name="Airline" value="">
-  <option value="SPIRIT">SPIRIT</option>
-  <option value="UNITED">UNITED</option>
-  <option value="JETBLUE">JETBLUE</option>
-  </select><br>
-  <label for="Tail">Tail</label><br>
-  <select type="text" id="Tail" name="Tail" value=""><br>
-  </select><br>
+
+
+<div id="mainscreen">
+
+	<div id="maindash" class="maindash" style="width: 900px;">
+	
+	<div id="airlineblock" class="dashboard2" style="float: left; width: 200px;">
+	<label for="Airline">Airline</label><br>
+	<select type="text" id="Airline" name="Airline" value="">
+    <option value="SPIRIT">SPIRIT</option>
+    <option value="UNITED">UNITED</option>
+    <option value="JETBLUE">JETBLUE</option>
+    </select>
+	</div>
+  
+	 <div id="tailblock" class="dashboard2" style="float: left; width: 200px;">
+	 <label for="Tail">Tail</label><br>
+	 <select type="text" id="Tail" name="Tail" value=""><br>
+	 </select>
+	 </div>
+  
+	<div id="dateblock" class="dashboard2" style="float: left; width: 200px;">
+	<i class="lar la-calendar"></i>
     <label for="Date">Date</label><br>
-  <input type=text id="Date" name="Date" value="202104"><br>
-  <button id="Refresh">Refresh</button><br>
-  <a id="FleetHealth" href="home">Fleet Health</a>
-  <a id="singleFlightAnalysisAnchor" href="singleFlightAnalysis">Single Flight Analysis</a>
-  <a id="UserAnalysisAnchor" href="UserAnalysis">User Analysis</a><br><br>
-      <div id="TailHealth"></div>
-      <div id="score_line"></div><br><br>
-      <div id="time_line"></div><br>
-      <div id="dark_table"></div><br><br>
-      <div id="fpm_udptrace_table"></div><br>
-      <div id="udptrace_table"></div><br>
-      <div id="fpm_table"></div><br>
-      <div id="user_line"></div><br>
-      <div id="user_bar"></div><br>
-      <div id="div1"></div>
+	<input type=text id="Date" name="Date" value="202104"><br>
+	</div><br>
+	
+	</div><br><br><br><br><br><br><br><br><br>
+  
+    <div id="datascreen">
+	<div class="center">
+	  <button id="Refresh" class="refreshbutton">Refresh</button><br>
+	  <a id="FleetHealth" href="home">Fleet Health</a>
+	  <a id="singleFlightAnalysisAnchor" href="singleFlightAnalysis">Single Flight Analysis</a>
+	  <a id="UserAnalysisAnchor" href="UserAnalysis">User Analysis</a><br><br>
+	</div>  
+		  <div id="TailHealth" class="corners"></div>
+		  <div id="score_line" class="corners"></div><br><br>
+		  <div id="time_line"class="corners"></div><br>
+		  <div id="dark_table"class="corners"></div><br><br>
+		  <div id="fpm_udptrace_table"class="corners"></div><br>
+		  <div id="udptrace_table"class="corners"></div><br>
+		  <div id="fpm_table"class="corners"></div><br>
+		  <div id="user_line"class="corners"></div><br>
+		  <div id="user_bar"class="corners"></div><br>
+		  <div id="div1" class="corners"></div>
 
-      <script src="DateHelper.js"></script>
-      <script src="Cookies.js"></script>
-      <script src="IdGetter.js"></script>
-      <script src="GraphingUtils.js"></script>
-      <script src="GrapherThSfa.js"></script>
+		  <script src="DateHelper.js"></script>
+		  <script src="Cookies.js"></script>
+		  <script src="IdGetter.js"></script>
+		  <script src="GraphingUtils.js"></script>
+		  <script src="GrapherThSfa.js"></script>
+	</div>
 
+
+</div>
 </body>
 </html>
