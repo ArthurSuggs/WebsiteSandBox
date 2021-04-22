@@ -17,17 +17,31 @@
         height: 400px;
         width: 100%;
       }
+	  #grad1 {
+		background: rgb(164,164,179);
+		background: linear-gradient(90deg, rgba(164,164,179,1) 0%, rgba(254,255,255,1) 63%);
+	 }
   </style>
 </head>
-  <!--<body style="background-image:url('pexels.jpg');">-->
-<body style="background-color:#white;" >
-<img src="thales_logo.jpg" alt="Parser_Logo" class="logo">
 
-<div id="mainscreen">
+<body  id="grad1" >
 
+<!-- Start of sidenav menu -->
+  <div id="mySidenav" class="sidenav">
+		<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+  	  <a id="FleetHealthAnchor" href="home">Fleet Health</a>
+	  <a id="TailHealthAnchor" href="TailHealth">Tail Health</a>
+    <a id="singleFlightAnalysisAnchor" href="singleFlightAnalysis">Flight Analysis</a><br><br>
+  </div>
+<!-- End of sidenav menu -->
+
+<div id="main">
+
+	<img src="thales_logo.jpg" alt="Parser_Logo" class="logo">
+	<span style="font-size:25px;cursor:pointer" onclick="openNav()">&#9776; Menu </span>
 	<div id="maindash" class="maindash" style="width: 1500px;">
 
-	  <div id="airlineblock" class="dashboard" style="float: left; width: 200px;">
+	  <div id="airlineblock" class="dashboard3" style="float: left; width: 200px;">
 	  <label for="Airline" >Airline</label><br>
     <select type="text" id="Airline" name="Airline" value="">
     <option value="SPIRIT">SPIRIT</option>
@@ -36,27 +50,27 @@
     </select>
 	  </div>
 
-	  <div id="tailblock" class="dashboard" style="float: left; width: 200px;">
+	  <div id="tailblock" class="dashboard3" style="float: left; width: 200px;">
       <label for="Tail">Tail</label><br>
   	  <select type="text" id="Tail" name="Tail" value=""><br>
   	  </select>
 	  </div>
 
-	  <div id="flightblock" class="dashboard" style="float: left; width: 200px;">
+	  <div id="flightblock" class="dashboard3" style="float: left; width: 200px;">
 	  <i class="las la-plane-departure"></i>
 	  <label for="FlightId">FlightId</label><br>
 	  <select type="text" id="FlightId" name="FlightId" value=""><br>
 	  </select>
 	  </div>
 
-	   <div id="userblock" class="dashboard" style="float: left; width: 200px;">
+	   <div id="userblock" class="dashboard3" style="float: left; width: 200px;">
 	   <i class="las la-user"></i>
 	   <label for="UserId">UserId</label><br>
 	   <select type="text" id="UserId" name="UserId" value=""><br>
 	   </select>
 	   </div>
 
-	   <div id="dateblock" class="dashboard" style="float: left; width: 200px;">
+	   <div id="dateblock" class="dashboard3" style="float: left; width: 200px;">
 	   <i class="lar la-calendar"></i>
 	   <label for="Date">Date</label><br>
      <input type="date" id="Date" name="Date"><br>
@@ -70,10 +84,6 @@
 	<div id="datascreen">
 	  <div class="center">
 	  <button id="Refresh" class="refreshbutton">Refresh</button><br>
-	  <a id="FleetHealthAnchor" href="home">Fleet Health</a>
-	  <a id="TailHealthAnchor" href="TailHealth">Tail Health</a>
-    <a id="singleFlightAnalysisAnchor" href="singleFlightAnalysis">Single Flight Analysis</a><br><br>
-
 	  </div>
 		  <div id="UserAnalysis"></div>
       <div id="usage_free_scatter"></div><br>
@@ -111,5 +121,20 @@
 		 <!-- <script src="scriptDrawFlight.js"></script> -->
 	</div>
 </div>
+<!--end of Main Content page-->
+
+    <script>
+  /* Set the width of the side navigation to 250px */
+  function openNav() {
+    document.getElementById("mySidenav").style.width = "300px";
+    document.getElementById("main").style.marginLeft = "300px";
+  }
+  /* Set the width of the side navigation to 0 */
+  function closeNav() {
+    document.getElementById("mySidenav").style.width = "0";
+    document.getElementById("main").style.marginLeft= "0";
+  }
+  openNav();
+  </script>
 </body>
 </html>

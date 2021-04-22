@@ -18,6 +18,7 @@ TailHealth
 -LRU uptime per day
 
 Single Flight Analysis
+-FlightPhase, Reboot, Process crash times
 -Add timeline like Ashwins tool
 -Add lan ip graph
 -Noise analysis

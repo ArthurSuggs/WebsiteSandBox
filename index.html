@@ -9,8 +9,15 @@
 
   <script src="loader.js"></script>
   <script src="common.js"></script>
+  <style>
+  	  #grad1 {
+		background: rgb(164,164,179);
+		background: linear-gradient(90deg, rgba(164,164,179,1) 0%, rgba(254,255,255,1) 63%);
+	 }
+   </style>
 </head>
-<body style="background-color:#white;" onload="getLogo(document.getElementById('Airline').value)">
+<!--<body style="background-color:#white;" onload="getLogo(document.getElementById('Airline').value)">-->
+<body id="grad1" onload="getLogo(document.getElementById('Airline').value)">
 
 <!-- Start of sidenav menu -->
   <div id="mySidenav" class="sidenav">
@@ -28,8 +35,9 @@
   <button class="refresh" id="Refresh">Refresh</button><br>
 
 
-  <a id="TailHealthAnchor" href="TailHealth">TailHealth</a>
-  <a id="singleFlightAnalysisAnchor" href="singleFlightAnalysis">deepDive</a>
+  <a id="TailHealthAnchor" href="TailHealth">Tail Health</a>
+  <a id="singleFlightAnalysisAnchor" href="singleFlightAnalysis">Flight Analysis</a>
+  <a id="UserAnalysisAnchor" href="UserAnalysis">User Analysis</a><br><br>
 
   </div>
   <!-- End of sidenav menu -->

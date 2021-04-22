@@ -728,5 +728,34 @@ func (res FingerPrintResults) ResultToCsv() string {
 	return csvString
 }
 
+type LogOffload struct {
+	TimeStamp string
+	Name      string
+	Priority  string
+	Size      int
+	Status    string
+	Link      string
+}
+type LogOffloadResults struct {
+	FileName   string
+	LogOffload []LogOffload
+}
+
+func (res LogOffloadResults) ResultToJson() string {
+	out, err := json.Marshal(res)
+	if err != nil {
+		panic(err)
+	}
+	return string(out)
+}
+func (res LogOffloadResults) ResultToCsv() string {
+	v := reflect.ValueOf(res)
+	var csvString string
+	for i := 0; i < v.NumField(); i++ {
+		csvString = fmt.Sprintf("%v%v,", csvString, v.Field(i).Interface())
+	}
+	return csvString
+}
+
 type Eth0IssueResults struct {
 }

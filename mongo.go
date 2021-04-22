@@ -147,7 +147,12 @@ func (m *MgSession) FindDistinctStringsFromRgxOnFilename(rgx string, distinctId 
 	}
 	return res
 }
-
+func (m *MgSession) FindRgxMatchInLogOffload(rgx string) []LogOffloadResults {
+	var res []LogOffloadResults
+	m.Collection.Find(bson.M{"filename": bson.RegEx{Pattern: rgx, Options: "i"}}).All(&res)
+	//m.Collection.Find(bson.M{"filename": bson.RegEx{Pattern: rgx, Options: "i"}}).Select(bson.M{"logoffload.name": 1, "_id": 0}).All(&res)
+	return res
+}
 func (m *MgSession) FindRgxMatchInCollectionAndReturnCntOfDocs(rgx string) int {
 	cnt, err := m.Collection.Find(bson.M{
 		"filename": bson.RegEx{

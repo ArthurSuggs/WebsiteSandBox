@@ -17,10 +17,13 @@ header {
   display:inline-block;
 }
 #udptrace_graph_rx{
-  height:100vh;
+  height:100;
 }
 #udptrace_graph_tx{
-  height:100vh;
+  height:100;
+}
+#flightphase_time_line{
+  height:100;
 }
 #usage_chart_wan{
   height:100vh;
@@ -51,6 +54,7 @@ header {
   margin-right: auto;
   /*top:180px;*/
 }
+
 
 .menu {
   padding: 8px 8px 8px 32px;
@@ -94,6 +98,41 @@ header {
   color: #EBF5F3;
   text-align: center;
   margin: 20px;
+}
+
+.dashboard2 {
+  border-radius: 25px;
+  width: 20%;
+  background: #A3C231;
+  padding: 20px;
+  width: 200px;
+  height: 100px;
+  font-family: "Times New Roman", Times, serif, bold;
+  font-size: 35px;
+  color: #EBF5F3;
+  text-align: center;
+  margin: 20px;
+}
+
+.dashboard3 {
+  border-radius: 25px;
+  width: 20%;
+  background: #FEB063;
+  padding: 20px;
+  width: 200px;
+  height: 100px;
+  font-family: "Times New Roman", Times, serif, bold;
+  font-size: 35px;
+  color: #EBF5F3;
+  text-align: center;
+  margin: 20px;
+}
+
+.corners {
+  border-radius: 25px;
+  border: 5px;
+  padding: 40px;
+
 }
 
 .center {

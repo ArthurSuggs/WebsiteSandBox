@@ -104,6 +104,21 @@ var SWVersionsStruct = [
     ['string', 'ModemSWVer'],
     ['string', 'WAP1SoftwareVersion']
 ]
+var LogOffloadPerFileStruct = [
+  ['string', 'TakeOff'],
+  ['string', 'Landing'],
+  ['string', 'Departure'],
+  ['string', 'Destination'],
+  ['string', 'FlightID'],
+  ['boolean', 'Above10k'],
+  ['number', 'UsageOffloads'],
+  ['number', 'AllOffloads']
+]
+var LogOffloadPerFileBarCharStruct = [
+  ['datetime', 'TakeOff'],
+  ['number', 'UsageOffloads'],
+  ['number', 'AllOffloads']
+]
 var DarkAircraftStruct = [
   ['string', 'Tail'],
   ['string', 'Type'],
@@ -167,10 +182,37 @@ var AAUGraphSESStruct = {'aaugraphses': [
   ['number', 'bytesrxair'],
   ['number', 'altitude'],
 ]}
+var LanIPGraphStruct = {'englogpoints': [
+  ['datetime', 'currenttime'],
+  ['number', 'lanipcnt'],
+  ['number', 'currentroutecnt'],
+  ['number', 'userregcnt'],
+  ['number', 'alt']
+]}
+var FlightPhasesStruct = {'flightphases': [
+  ['string', 'name'],
+  ['datetime', 'time'],
+  ['datetime', 'time']
+]}
+var FlightPhasesTableStruct = {'flightphases': [
+  ['datetime', 'time'],
+  ['string', 'name']
+]}
+var RebootsStruct = {'reboots': [
+  ['datetime', 'time'],
+  ['string', 'name']
+]}
+var UserRegStruct = {'userreg': [
+  ['string', 'userid'],
+  ['datetime', 'creationtime'],
+  ['datetime', 'creationtime']
+]}
 var WapDataOptions = {chart: { title: "WapData"},width: '100%'};
 var AAUGraphSESOptions = {chart: { title: "AAUGraphSES"},width: '100%'};
+var LanIpGraphSESOptions = {chart: { title: "Users From Englog Graph. NOTE: Data is lost during rate limit logging"},width: '100%'};
 var UDPTraceDetailGraphSESOptions = {chart: { title: "UDPTraceDetail"},width: '100%'};
 var UsageDetailsOptions  = {chart: { title: "UsageDetails"},width: '50%'};
+var UserRegOptions  = {chart: { title: "User Manager: Got user registration command timeline"},width: '1000%'};
 AAUGraphSESOptions.explorer = {
   actions: ['dragToZoom', 'rightClickToReset'],
   axis: 'horizontal',
@@ -223,6 +265,14 @@ function TailHealth(UrlParamaters) {
     parser: "FPMfastSES",
     flightId: '.*'
   }
+  var InfoForTailHealthLogOffload = {
+    url: "LogOffload",
+    airline: document.getElementById("Airline").value,
+    date: formatDate(),
+    tail: document.getElementById("Tail").value,
+    parser: "LogOffload",
+    flightId: '.*'
+  }
   var InfoForUserCntPerFlight = {
     url: "UserCntPerFlight",
     airline: document.getElementById("Airline").value,
@@ -263,6 +313,7 @@ function TailHealth(UrlParamaters) {
     getFPMFastUdpTrace(InfoForFPMfastSESandUDPTraceTailHealth,FPMFastUdpTraceStruct,"fpm_udptrace_table")
     getDeepDiveDataUdptraceSummary(InfoForUdpTraceSummaryTailHealth)
   }
+  getLogOffload(InfoForTailHealthLogOffload)
   getDarkAircraft(InfoForDarkAircraft)
   getTailHealthFPMfastSES(InfoForTailHealthFPMfast)
   getUserCntPerFlight(InfoForUserCntPerFlight,UsersPerFlightLineStruct,"")
@@ -279,6 +330,27 @@ function DeepDive(UrlParamaters){
     tail: document.getElementById("Tail").value,
     parser: "FPMfastSES",
     flightId: document.getElementById("FlightId").value,
+  }
+  var InfoForFPMfastSESandUDPTraceTailHealth= {
+    url: "FPMfastSESandUDPTrace",
+    airline: document.getElementById("Airline").value,
+    //date: document.getElementById("Date").value,
+    //This looks crazy but the date is replaced by the value
+    //In flight ID.
+    date: ".*",
+    tail: document.getElementById("Tail").value,
+    flightId: document.getElementById("FlightId").value,
+    parser: "UdpTraceSummary"
+  }
+  var InfoForLanIpGraph = {
+    url: "mongoData",
+    airline: document.getElementById("Airline").value,
+    //date: document.getElementById("Date").value,
+    date: ".*",
+    tail: document.getElementById("Tail").value,
+    flightId: document.getElementById("FlightId").value,
+    options: LanIpGraphSESOptions,
+    parser: "EnglogEvents"
   }
   var InfoForAAUGraphSES = {
     url: "mongoData",
@@ -348,10 +420,10 @@ function DeepDive(UrlParamaters){
     getFlightIds()
   }
 
-  if(document.getElementById("FlightId").value){
+  /*if(document.getElementById("FlightId").value){
     getUserIds()
   }
-  /*if(document.getElementById("UserId").value){
+  if(document.getElementById("UserId").value){
     //figure this out
   //  UsageDetailsOptions.options.chart.subtitle = document.getElementById("UserId").value
     getDeepDiveDataUsageDetails(InfoForUsageDetailsSES)
@@ -368,14 +440,41 @@ function DeepDive(UrlParamaters){
   InfoForAAUGraphSES.options.chart.subtitle = InfoForAAUGraphSES.flightId
   //getDeepDiveDataSpecificParser has a dependency on the 1st arg having an options element
   getDeepDiveDataSpecificParserChart(InfoForAAUGraphSES,AAUGraphSESStruct,'aau_graph')
+  getFPMFastUdpTrace(InfoForFPMfastSESandUDPTraceTailHealth,FPMFastUdpTraceStruct,"fpm_udptrace_table")
+  getEnglogEvents(InfoForLanIpGraph)
   /*getDeepDiveDataSpecificParser2(InfoForWapData,WapDataStruct,'wap_data')*/
+}
+function getEnglogEvents(QueryInfo){
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
+    .then(response => response.json())
+    .then(info => {
+      drawTableFromOneDeepJson(QueryInfo.parser,FlightPhasesTableStruct,'flightphase_table',QueryInfo,info)
+      drawLineChartFromArrayInOneDeepJson(QueryInfo.parser,LanIPGraphStruct,'lan_ip_graph',QueryInfo,info)
+      QueryInfo.options = UserRegOptions
+      drawtimelineOneNameTwoTimes(QueryInfo.parser,UserRegStruct,'usage_time_line',QueryInfo,info)
+      drawtimelineOneNameTwoTimes(QueryInfo.parser,FlightPhasesStruct,'flightphase_time_line',QueryInfo,info)
+
+    });
+}
+function getLogOffload(QueryInfo) {
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
+    .then(response => response.json())
+    .then(info => {
+      //console.log(info)
+      drawTableGeneric(QueryInfo.parser,LogOffloadPerFileStruct,"log_offload_table",QueryInfo,info)
+      QueryInfo.options = { chart: { title: 'v',}}
+      //QueryInfo.options.title = "Offloads - Scatter"
+      drawScatterChartFromArrayOfFlatJSON(QueryInfo.parser,LogOffloadPerFileBarCharStruct,'log_offload_scatter',QueryInfo,info)
+    });
 }
 function getDarkAircraft(QueryInfo) {
   fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
   '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
     .then(info => {
-      console.log(info)
+      //console.log(info)
       drawTableGeneric(QueryInfo.parser,DarkAircraftStruct,"dark_table",QueryInfo,info)
     });
 }

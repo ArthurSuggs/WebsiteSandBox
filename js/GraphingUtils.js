@@ -109,6 +109,51 @@ function drawHistogramGeneric(parser,genStruct,ElementId,QueryInfo,info) {
       console.log("No data in")
     }
 }
+function drawtimelineOneNameTwoTimes(parser,genStruct,ElementId,QueryInfo,info) {
+    var container = document.getElementById(ElementId);
+    var chart = new google.visualization.Timeline(container);
+    var dataTable = new google.visualization.DataTable();
+    var rows = new Array();
+    var timelineCnt = 0
+    for (var key of Object.keys(genStruct)) {
+        for (var index in genStruct[key]) {
+          dataTable.addColumn(genStruct[key][index][0],genStruct[key][index][1])
+        }
+    }
+    if(info){
+      for (var root of info) {
+        keys = Object.keys(root)
+        for (var key of keys) {
+          for (var index in root[key]) {
+            var row = AddRowsToTableBasedOnGenericStructAndOneDeepJson(genStruct, root[key][index])
+            if(row.length !== 0 && !row.includes("NaN")){
+              rows.push(row)
+              dataTable.addRows(rows)
+              timelineCnt++
+            }
+            rows = new Array();
+          }
+        }
+      }
+    }
+    if (timelineCnt>0){
+        var options = {
+            timeline: { colorByRowLabel: true },
+            width: '100%',
+            backgroundColor: '#ffd'
+          };
+          options.width = '100%';
+          var weight = 25
+          if(timelineCnt > 50){
+            weight = 8
+          }
+          options.height = timelineCnt*weight
+      chart.draw(dataTable, options);
+    } else {
+      document.getElementById(ElementId).innerHTML = "";
+      console.log("No data in")
+    }
+}
 function drawtimelineChartSES(parser,genStruct,ElementId,QueryInfo,info) {
     var container = document.getElementById(ElementId);
     var chart = new google.visualization.Timeline(container);
@@ -138,9 +183,10 @@ function drawtimelineChartSES(parser,genStruct,ElementId,QueryInfo,info) {
     if (timelineCnt>0){
         var options = {
             timeline: { colorByRowLabel: true },
-            width: '100%', height: '100%',
+            width: '100%', height: 25,
             backgroundColor: '#ffd'
           };
+      //options.height = timelineCnt*25
       chart.draw(dataTable, options);
     } else {
       document.getElementById(ElementId).innerHTML = "";
@@ -148,7 +194,52 @@ function drawtimelineChartSES(parser,genStruct,ElementId,QueryInfo,info) {
     }
   }
 }
+function drawTableFromOneDeepJson(parser,genStruct,ElementId,QueryInfo,info) {
+      var table = new google.visualization.Table(document.getElementById(ElementId));
+      var data = new google.visualization.DataTable();
+      var rows = new Array();
+      var OneDeepJsonKey = ""
+      //Populate columns
+      for (var key of Object.keys(genStruct)) {
+        OneDeepJsonKey = key
+          for (var index in genStruct[key]) {
+            data.addColumn(genStruct[key][index][0],genStruct[key][index][1])
+          }
+      }
+      if(info){
+        for (var root of info) {
+          //remove garbage from keys
+          //Keys are _id,filename,arrayKey
+          keys = Object.keys(root)
+          for (var key of keys) {
+            if (key !== OneDeepJsonKey){
+              const indexOfKey = keys.indexOf(key);
+              if (indexOfKey > -1) {
+                keys.splice(indexOfKey, 1);
+              }
+            }
+          }
 
+          for (var key of keys) {
+            for (var index in root[key]) {
+              var row = AddRowsToTableBasedOnGenericStructAndOneDeepJson(genStruct, root[key][index])
+
+              if(row.length !== 0 && !row.includes("NaN")){
+                rows.push(row)
+              }
+            }
+          }
+        }
+      }
+      if (rows.length > 0) {
+        rows.sort(sortFunction);
+        data.addRows(rows);
+        table.draw(data, {width: '100%', height: '100%'});
+      } else {
+        document.getElementById(ElementId).innerHTML = "";
+        console.log("No data in")
+      }
+}
 function drawTableGeneric(parser,genStruct,ElementId,QueryInfo,info) {
       var table = new google.visualization.Table(document.getElementById(ElementId));
       var data = new google.visualization.DataTable();
@@ -174,14 +265,6 @@ function drawTableGeneric(parser,genStruct,ElementId,QueryInfo,info) {
             rows.push(AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, key))
           }
         }
-        /*if (parser === "FPMfastSES") {
-          addOptionsToSelect(flightIds, 'FlightId')
-        } else if (parser === "FleetHealth"){
-          var arrayOfOptions = [... links]
-          for(index in arrayOfOptions) {
-            addAnchor('deep', arrayOfOptions[index], 'deep?Airline=' + QueryInfo.airline + '&Tail=' + arrayOfOptions[index])
-          }
-        }*/
       }
       if (rows.length > 0) {
         rows.sort(sortFunction);
@@ -261,9 +344,7 @@ function drawLineChartFromArrayInOneDeepJson(parser,genStruct,ElementId,QueryInf
   var data = new google.visualization.DataTable();
   var rows = new Array();
   var columnLength = 0
-  if(parser === "UsageDetails"){
-    console.log(info)
-  }
+
   //Populate columns
   for (var key of Object.keys(genStruct)) {
       for (var index in genStruct[key]) {
@@ -301,6 +382,9 @@ function drawLineChartFromArrayInOneDeepJson(parser,genStruct,ElementId,QueryInf
 
     if(parser === "AAUGraphSES"){
       QueryInfo.options.height = columnLength*60
+      QueryInfo.options.series = CreateSeriesFromGenStruct(genStruct)
+    } else if(parser === "EnglogEvents") {
+      QueryInfo.options.height = columnLength*100
       QueryInfo.options.series = CreateSeriesFromGenStruct(genStruct)
     } else if(parser === "UDPTraceBandwidthDetails") {
       QueryInfo.options.height = columnLength*200
@@ -391,8 +475,8 @@ function AddRowsToTableBasedOnGenericStructAndOneDeepJson(genStruct, MapOfArrays
       for (key of Object.keys(genStruct)) {
       for (index in genStruct[key]) {
         //Check to see if the key is in MapOfArraysJson
-      //  if (MapOfArraysJson.hasOwnProperty([genStruct[key][index][1]]))
-      //  {
+        if (MapOfArraysJson.hasOwnProperty([genStruct[key][index][1]]))
+        {
           if (genStruct[key][index][0] === 'datetime') {
             row.push(new Date(MapOfArraysJson[genStruct[key][index][1]]))
           } else if (genStruct[key][index][0] === 'number') {
@@ -400,7 +484,7 @@ function AddRowsToTableBasedOnGenericStructAndOneDeepJson(genStruct, MapOfArrays
           } else {
             row.push(MapOfArraysJson[genStruct[key][index][1]])
           }
-      //  }
+        }
       }
     }
   }
