@@ -3,8 +3,8 @@ google.charts.load('current', {'packages':['line']});
 google.charts.load('current', {'packages':['table']});
 google.charts.load('current', {'packages':['timeline']});
 google.charts.load('current', {'packages':['scatter']});
-//var webserver = 'http://MLB-M4244:8080/'
-var webserver = 'http://localhost:8080/'
+var webserver = 'http://MLB-M4244:8080/'
+//var webserver = 'http://localhost:8080/'
 var UsageSummaryStruct = [
   ['datetime', 'registrationrec'],
   ['string', 'flightid'],
