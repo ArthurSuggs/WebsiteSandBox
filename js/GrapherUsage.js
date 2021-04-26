@@ -3,8 +3,8 @@ google.charts.load('current', {'packages':['line']});
 google.charts.load('current', {'packages':['table']});
 google.charts.load('current', {'packages':['timeline']});
 google.charts.load('current', {'packages':['scatter']});
-var webserver = 'http://MLB-M4244:8080/'
-//var webserver = 'http://localhost:8080/'
+//var webserver = 'http://MLB-M4244:8080/'
+var webserver = 'http://localhost:8080/'
 var UsageSummaryStruct = [
   ['datetime', 'registrationrec'],
   ['string', 'flightid'],
@@ -31,7 +31,20 @@ var UserFreeScatterChartStruct = [
   ['number', 'paidwanrxmb'],
   ['number', 'autowanrxmb']
 ]
-
+var UserPaidBubbleChartStruct = [
+  ['string', 'userid','Id'],
+  ['datetime', 'registrationrec','Start'],
+  ['number', 'paidwanrxmb','Paid Wan Rx MB'],
+  ['string', 'producttype','Product Type'],
+  ['number', 'servicetput','Sample Size']
+]
+var UserFreeBubbleChartStruct = [
+  ['string', 'userid','Id'],
+  ['datetime', 'registrationrec','Start'],
+  ['number', 'autowanrxmb','Free Wan Rx MB'],
+  ['string', 'producttype','Product Type'],
+  ['number', 'servicetput','Sample Size']
+]
 var UsageBarStruct = [
   ['string', 'userid'],
   ['number', 'autowanrxmb'],
@@ -119,7 +132,7 @@ function DeepDiveUsage(UrlParamaters){
     url: "mongoData",
     airline: document.getElementById("Airline").value,
     //it's going into the date for that part of the regex used to query mongo
-    date: document.getElementById("UserId").value,
+    date: document.getElementById("UserId").value+".XML",
     tail: ".*",
     flightId: ".*",
     options: UsageDetailsOptions,
@@ -158,6 +171,12 @@ function getDeepDiveDataUsageSummary(QueryInfo) {
       drawBarChartGeneric(QueryInfo.parser,UsageBarStruct,'usage_bar',QueryInfo,info)
         QueryInfo.options.title = "User Session Length - Histogram"
       drawHistogramGeneric(QueryInfo.parser,UserHistogramStruct,'usage_hist',QueryInfo,info)
+
+      QueryInfo.options.title = "X - Users registration time: Y - Paid WanRx: Size - Sample Size  - Bubble"
+      drawBubbleChartFromArrayOfFlatJSON(QueryInfo.parser,UserPaidBubbleChartStruct,'usage_paid_bubble',QueryInfo,info)
+      QueryInfo.options.title = "X - Users registration time: Y - Free WanRx: Size - Sample Size  - Bubble"
+      drawBubbleChartFromArrayOfFlatJSON(QueryInfo.parser,UserFreeBubbleChartStruct,'usage_free_bubble',QueryInfo,info)
+
       QueryInfo.options.title = "Users registration time and usage - Scatter"
       drawScatterChartFromArrayOfFlatJSON(QueryInfo.parser,UserFreeScatterChartStruct,'usage_free_scatter',QueryInfo,info)
       QueryInfo.options.title = "Users Paid WanRx"

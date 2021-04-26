@@ -504,9 +504,7 @@ func DarkAircraft(res http.ResponseWriter, req *http.Request) {
 	data := ms.FindRgxMatchInDarkCollection("tail", choppedTail)
 	fmt.Println(req.Method, "Getting DarkAircraft from", ParserName)
 	fmt.Println(Airline + "_" + ".*" + "_" + choppedTail)
-	for _, filename := range data {
-		fmt.Println(filename)
-	}
+
 	enc := json.NewEncoder(res)
 	enc.Encode(data)
 }

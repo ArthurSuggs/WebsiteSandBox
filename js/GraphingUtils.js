@@ -143,9 +143,17 @@ function drawtimelineOneNameTwoTimes(parser,genStruct,ElementId,QueryInfo,info) 
             backgroundColor: '#ffd'
           };
           options.width = '100%';
-          var weight = 25
-          if(timelineCnt > 50){
+          var weight = 50
+          if(timelineCnt > 150){
+            weight = 1.5
+          } else if(timelineCnt > 100){
+            weight = 4
+          } else if(timelineCnt > 50){
             weight = 8
+          } else if(timelineCnt > 25){
+            weight = 16
+          } else if(timelineCnt > 12){
+            weight = 32
           }
           options.height = timelineCnt*weight
       chart.draw(dataTable, options);
@@ -270,6 +278,52 @@ function drawTableGeneric(parser,genStruct,ElementId,QueryInfo,info) {
         rows.sort(sortFunction);
         data.addRows(rows);
         table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+      } else {
+        document.getElementById(ElementId).innerHTML = "";
+        console.log("No data in")
+      }
+}
+function drawBubbleChartFromArrayOfFlatJSON(parser,bubbleStruct,ElementId,QueryInfo,info) {
+      var chart = new google.visualization.BubbleChart(document.getElementById(ElementId));
+      var rows = new Array();
+      var columnLength = 0
+      //bubbleStruct
+      /*var UserPaidBubbleChartStruct = [
+        ['string', 'userid','Id'],
+        ['datetime', 'registrationrec','Start'],
+        ['number', 'paidwanrxmb','Paid Wan Rx MB'],
+        ['number', 'logpurchase','Purchase count'],
+        ['number', 'servicetput','Sample Size']
+      ]*/
+       var header = new Array();
+       for (var row of bubbleStruct) {
+         header.push(row[2])
+         columnLength++
+       }
+      if(info){
+        for (var key of info) {
+          if (parser.includes("FPMfast")) {
+            if (key['above10k'] && key['timeabove10k'] > 0) {
+              rows.push(AddRowsToTableBasedOnBubbleStructAndFlatJson(bubbleStruct, key))
+            }
+          } else {
+            rows.push(AddRowsToTableBasedOnBubbleStructAndFlatJson(bubbleStruct, key))
+          }
+        }
+      }
+      if (rows.length > 0) {
+        var rowsClean = new Array();
+        rowsClean.push(header)
+        for(misformed of rows) {
+          //for(row of misformed) {
+            rowsClean.push(misformed)
+        //  }
+        }
+        var data = google.visualization.arrayToDataTable(rowsClean)
+      //  QueryInfo.options.width = "900px";
+      //  QueryInfo.options.height =  "500px";
+      QueryInfo.options.height = columnLength*120;
+        chart.draw(data, QueryInfo.options);
       } else {
         document.getElementById(ElementId).innerHTML = "";
         console.log("No data in")
@@ -462,6 +516,19 @@ function AddRowsToTableBasedOnPieStructAndFlatJson(pieStruct, flatJson) {
      row.push([pieStruct[index][2],Number(flatJson[pieStruct[index][1]])])
    } else {
      row.push(flatJson[pieStruct[index][1]])
+   }
+ }
+ return row
+}
+function AddRowsToTableBasedOnBubbleStructAndFlatJson(bubbleStruct, flatJson) {
+  var row = new Array();
+  for (index in bubbleStruct) {
+   if (bubbleStruct[index][0] === 'datetime') {
+     row.push(new Date(flatJson[bubbleStruct[index][1]]))
+   } else if (bubbleStruct[index][0] === 'number') {
+     row.push(Number(flatJson[bubbleStruct[index][1]]))
+   } else {
+     row.push(flatJson[bubbleStruct[index][1]])
    }
  }
  return row

@@ -1,5 +1,5 @@
-var webserver = 'http://MLB-M4244:8080/'
-//var webserver = 'http://localhost:8080/'
+//var webserver = 'http://MLB-M4244:8080/'
+var webserver = 'http://localhost:8080/'
 var UsageSummaryStruct = [
   ['datetime', 'registrationrec'],
   ['string', 'flightid'],
@@ -30,6 +30,21 @@ var UserPaidScatterChartStruct = [
   ['datetime', 'registrationrec'],
   ['number', 'paidwanrxmb']
 ]
+var TailHealthSESBubbleChartStruct = [
+  ['string', 'FlightID','FlightID'],
+  ['datetime', 'StartOf10K','Start of 10K'],
+  ['number', 'RxTotal','Rx Total'],
+  ['number', 'RebootsInAir','Reboots In Air'],
+  ['number', 'InternetStatus10k','Internet Status Over 10k']
+]
+var TailHealthBubbleChartStruct = [
+  ['string', 'flightid','FlightID'],
+  ['datetime', 'startof10k','Start of 10K'],
+  ['number', 'rxtotal','Rx Total'],
+  ['number', 'rebootsinair','Reboots In Air'],
+  ['number', 'internetstatus10k','Internet Status Over 10k']
+]
+
 var WapDataStruct = {
   'wap1data': [
     ['datetime','currenttime'],
@@ -130,6 +145,10 @@ var DarkAircraftStruct = [
   ['string', 'Root_Cause'],
   ['string', 'Engineering_Notes']
 ]
+var DarkAircraftHistogramStruct = [
+  ['string', 'Root_Cause'],
+  ['string', 'Mx_Action']
+]
 var FPMFastStruct = [
   ['datetime', 'startof10k'],
   ['datetime', 'endof10k'],
@@ -207,9 +226,16 @@ var UserRegStruct = {'userreg': [
   ['datetime', 'creationtime'],
   ['datetime', 'creationtime']
 ]}
+var MonitSummaryStruct = {'monitsummary': [
+  ['string', 'name'],
+  ['datetime', 'time'],
+  ['datetime', 'time']
+]}
 var WapDataOptions = {chart: { title: "WapData"},width: '100%'};
+var HealthBubbleOptions = {chart: { title: "Health Bubbles"},width: '100%'};
 var AAUGraphSESOptions = {chart: { title: "AAUGraphSES"},width: '100%'};
 var LanIpGraphSESOptions = {chart: { title: "Users From Englog Graph. NOTE: Data is lost during rate limit logging"},width: '100%'};
+var MonitSummaryTableOptions = {chart: { title: "Monit Summary"},width: '100%'};
 var UDPTraceDetailGraphSESOptions = {chart: { title: "UDPTraceDetail"},width: '100%'};
 var UsageDetailsOptions  = {chart: { title: "UsageDetails"},width: '50%'};
 var UserRegOptions  = {chart: { title: "User Manager: Got user registration command timeline"},width: '1000%'};
@@ -309,13 +335,14 @@ function TailHealth(UrlParamaters) {
   getTailIds()
   if(InfoForTailHealthFPMfast.airline !== "SPIRIT"){
     InfoForTailHealthFPMfast.parser = "FPMfast"
+    getTailHealthFPMfastSES(InfoForTailHealthFPMfast)
+
   } else {
-    getFPMFastUdpTrace(InfoForFPMfastSESandUDPTraceTailHealth,FPMFastUdpTraceStruct,"fpm_udptrace_table")
     getDeepDiveDataUdptraceSummary(InfoForUdpTraceSummaryTailHealth)
+    getFPMFastUdpTrace(InfoForFPMfastSESandUDPTraceTailHealth,FPMFastUdpTraceStruct,"fpm_udptrace_table")
   }
   getLogOffload(InfoForTailHealthLogOffload)
   getDarkAircraft(InfoForDarkAircraft)
-  getTailHealthFPMfastSES(InfoForTailHealthFPMfast)
   getUserCntPerFlight(InfoForUserCntPerFlight,UsersPerFlightLineStruct,"")
 }
 //If using the flightId remove the date from url
@@ -351,6 +378,16 @@ function DeepDive(UrlParamaters){
     flightId: document.getElementById("FlightId").value,
     options: LanIpGraphSESOptions,
     parser: "EnglogEvents"
+  }
+  var InfoForMonitSummaryTable = {
+    url: "mongoData",
+    airline: document.getElementById("Airline").value,
+    //date: document.getElementById("Date").value,
+    date: ".*",
+    tail: document.getElementById("Tail").value,
+    flightId: document.getElementById("FlightId").value,
+    options: MonitSummaryTableOptions,
+    parser: "MonitSummary"
   }
   var InfoForAAUGraphSES = {
     url: "mongoData",
@@ -442,7 +479,16 @@ function DeepDive(UrlParamaters){
   getDeepDiveDataSpecificParserChart(InfoForAAUGraphSES,AAUGraphSESStruct,'aau_graph')
   getFPMFastUdpTrace(InfoForFPMfastSESandUDPTraceTailHealth,FPMFastUdpTraceStruct,"fpm_udptrace_table")
   getEnglogEvents(InfoForLanIpGraph)
+  getMonitSummary(InfoForMonitSummaryTable)
   /*getDeepDiveDataSpecificParser2(InfoForWapData,WapDataStruct,'wap_data')*/
+}
+function getMonitSummary(QueryInfo){
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
+    .then(response => response.json())
+    .then(info => {
+      drawtimelineOneNameTwoTimes(QueryInfo.parser,MonitSummaryStruct,'monit_summary_time_line',QueryInfo,info)
+    });
 }
 function getEnglogEvents(QueryInfo){
   fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
@@ -474,8 +520,10 @@ function getDarkAircraft(QueryInfo) {
   '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
     .then(info => {
-      //console.log(info)
       drawTableGeneric(QueryInfo.parser,DarkAircraftStruct,"dark_table",QueryInfo,info)
+      /*QueryInfo.options = {'title':"DarkAircraft Date -> Root Cause - Histogram", showTextEvery:1, width: '100%',
+          bar: {groupWidth: "95%"}}
+      drawHistogramGeneric(QueryInfo.parser,DarkAircraftHistogramStruct,'dark_histogram',QueryInfo,info)*/
     });
 }
 
@@ -496,6 +544,11 @@ function getFPMFastUdpTrace(QueryInfo,CollectionStruct,GraphHtmlId){
     .then(response => response.json())
     .then(info => {
       drawTableGeneric(QueryInfo.parser,CollectionStruct,GraphHtmlId,QueryInfo,info)
+      var th = document.getElementById("TailHealth")
+      if(th){
+        QueryInfo.options = HealthBubbleOptions
+        drawBubbleChartFromArrayOfFlatJSON(QueryInfo.parser, TailHealthSESBubbleChartStruct,'health_bubble',QueryInfo,info)
+      }
     });
 }
 function getDeepDiveDataSpecificParserChart(QueryInfo,CollectionStruct,GraphHtmlId) {
@@ -518,6 +571,8 @@ function getTailHealthFPMfastSES(QueryInfo) {
          subtitle: 'over the date range provided'}, width: '100%', height: '100%'
         }
         drawLineChartFromArrayOfFlatJSON(QueryInfo.parser,ScoreLineGraphStruct,'score_line',QueryInfo,info)
+        QueryInfo.options = HealthBubbleOptions
+        drawBubbleChartFromArrayOfFlatJSON(QueryInfo.parser, TailHealthBubbleChartStruct,'health_bubble',QueryInfo,info)
     });
 }
 function getDeepDiveFPMfastSES(QueryInfo) {
