@@ -612,13 +612,16 @@ func (res SoftwareVersionSesResults) ResultToCsv() string {
 	return csvString
 }
 
+type MonitSummary struct {
+	Name   string
+	Action string
+	Time   time.Time
+}
+
 //Need Set of a process to give a summary of each
 type ProcessCrashResults struct {
-	FileName             string
-	ProcessNotRunning    int
-	ProcessRestarting    int
-	ReachedResourceLimit int
-	MonitReboot          int
+	FileName     string
+	MonitSummary []MonitSummary
 }
 
 func (res ProcessCrashResults) ResultToJson() string {
@@ -758,4 +761,93 @@ func (res LogOffloadResults) ResultToCsv() string {
 }
 
 type Eth0IssueResults struct {
+}
+type LogUserPurchaseCommand struct {
+	Time        time.Time
+	UserId      string
+	Price       float64
+	Product     string
+	Description string
+	OrderId     string
+	StateResult string
+	PlanID      string
+	DeviceId    string
+}
+type RequestInternetService struct {
+	Time        time.Time
+	UserId      string
+	ServiceName string
+	DeviceId    string
+}
+type VolumeLimitMonitor struct {
+	Time        time.Time
+	UserId      string
+	ServiceName string
+}
+type StartAaaAccounting struct {
+	Time    time.Time
+	UserId  string
+	Session string
+	WanIP   string
+}
+type UserReg struct {
+	UserId      string
+	CommandTime time.Time
+}
+type EnglogPoint struct {
+	CurrentTime     time.Time
+	LanIPCnt        int
+	CurrentRouteCnt int
+	UserRegCnt      int
+	Alt             float64
+}
+type EnglogEvent struct {
+	Name string
+	Time time.Time
+}
+type EnglogEventsResults struct {
+	FileName               string
+	FlightPhases           []EnglogEvent
+	Reboots                []EnglogEvent
+	EnglogPoints           []EnglogPoint
+	FkalMgrUpdateInternet  []FkalMgrUpdateInternet
+	UserReg                []UserReg
+	LogUserPurchaseCommand []LogUserPurchaseCommand
+	RequestInternetService []RequestInternetService
+	StartAaaAccounting     []StartAaaAccounting
+	VolumeLimitMonitor     []VolumeLimitMonitor
+	FingerPrintResults     map[string][]FingerPrint
+}
+
+func (res EnglogEventsResults) ResultToJson() string {
+	out, err := json.Marshal(res)
+	if err != nil {
+		panic(err)
+	}
+	return string(out)
+}
+func (res EnglogEventsResults) ResultToCsv() string {
+	v := reflect.ValueOf(res)
+	var csvString string
+	for i := 0; i < v.NumField(); i++ {
+		csvString = fmt.Sprintf("%v%v,", csvString, v.Field(i).Interface())
+	}
+	return csvString
+}
+
+type FkalMgrUpdateInternet struct {
+	CurrentTime           time.Time
+	InternetState         int
+	BroadbandSwitchState  int
+	InternetOverrideState int
+	SysInternet           int
+	SysIntranet           int
+	KamOnline             int
+	PortalOnline          int
+	WapsOnline            int
+}
+
+type FkalMgrUpdateInternetResults struct {
+	FileName              string
+	FkalMgrUpdateInternet []FkalMgrUpdateInternet
 }

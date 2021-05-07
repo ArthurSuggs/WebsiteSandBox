@@ -26,6 +26,7 @@ func main() {
 	http.Handle("/home", http.HandlerFunc(ServeMainPage))
 	http.Handle("/TailHealth", http.HandlerFunc(ServeTailHealth))
 	http.Handle("/singleFlightAnalysis", http.HandlerFunc(ServeDeepDive))
+	http.Handle("/singleFlightAnalysisFlytnet", http.HandlerFunc(ServeDeepDiveFlytnet))
 	http.Handle("/UserAnalysis", http.HandlerFunc(ServeUserAnalysis))
 
 	http.Handle("/FlightIDs", http.HandlerFunc(FlightIDs))
@@ -33,13 +34,23 @@ func main() {
 	http.Handle("/TailIDs", http.HandlerFunc(TailIDs))
 
 	http.Handle("/UserCntPerFlight", http.HandlerFunc(UserCntPerFlightOnDateRgx))
-	http.Handle("/FleetHealth", http.HandlerFunc(FleetHealthAirline))
+	//http.Handle("/FleetHealth", http.HandlerFunc(FleetHealthAirline))
+	http.Handle("/FleetHealth", http.HandlerFunc(FleetHealthAirlineAgg))
 	http.Handle("/FPMfastSESandUDPTrace", http.HandlerFunc(FPMfastSESandUDPTrace))
 	http.Handle("/LogOffload", http.HandlerFunc(GetLogOffload))
 
 	http.Handle("/DarkAircraft", http.HandlerFunc(DarkAircraft))
 	http.Handle("/SWVersions", http.HandlerFunc(SWVersions))
-	//http.Handle("/EnglogEvents", http.HandlerFunc(EnglogEvents))
+	http.Handle("/MonitSummary", http.HandlerFunc(MonitSummarizer))
+	http.Handle("/UserSessionsEng", http.HandlerFunc(UserSessionsEng))
+	http.Handle("/LogPurchaseCommandFromPPAccess", http.HandlerFunc(LogPurchaseCommandFromPPAccess))
+	http.Handle("/LogPurchaseCommandFromEnglog", http.HandlerFunc(LogPurchaseCommandFromEnglog))
+	http.Handle("/PortalPlatformGetRequestsByLanIp", http.HandlerFunc(PortalPlatformGetRequestsByLanIp))
+	http.Handle("/PortalPlatformMethodDeleteTimeAndData", http.HandlerFunc(PortalPlatformMethodDeleteTimeAndData))
+	http.Handle("/PortalPlatformMethodPUTTimeAndData", http.HandlerFunc(PortalPlatformMethodPUTTimeAndData))
+	http.Handle("/PortalPlatformMethodGETTimeAndData", http.HandlerFunc(PortalPlatformMethodGETTimeAndData))
+	http.Handle("/PortalPlatformHttpStatusResponses", http.HandlerFunc(PortalPlatformHttpStatusResponses))
+	http.Handle("/PortalPlatformData", http.HandlerFunc(PortalPlatformData))
 	http.Handle("/DarkEntry", http.HandlerFunc(ServeDarkEntry))
 	//http.Handle("/SWVersionsSES", http.HandlerFunc(SWVersionsSES))
 	http.Handle("/ParsedFilenames", http.HandlerFunc(ParsedFilenames))
@@ -80,6 +91,13 @@ func ServeDeepDive(res http.ResponseWriter, req *http.Request) {
 		Path:  "/",
 	})*/
 	tpl.ExecuteTemplate(res, "singleFlightAnalysis.html", nil)
+}
+func ServeDeepDiveFlytnet(res http.ResponseWriter, req *http.Request) {
+	err := req.ParseForm()
+	if err != nil {
+		fmt.Println(err)
+	}
+	tpl.ExecuteTemplate(res, "singleFlightAnalysisFlytnet.html", nil)
 }
 func ServeDarkEntry(res http.ResponseWriter, req *http.Request) {
 	err := req.ParseForm()
@@ -297,9 +315,478 @@ func GetLogOffload(res http.ResponseWriter, req *http.Request) {
 	fmt.Println(Airline + "_" + TailId + "_" + ".*" + "_" + DateYYYYMMDD)
 }
 
-/*func EnglogEvents(res http.ResponseWriter, req *http.Request) {
+type UserSessionData struct {
+	UserId                      string
+	CreationTime                time.Time
+	LogUserPurchaseCommandTime  time.Time
+	LogUserPurchaseCommandCount int
+	RequestInternetServiceTime  time.Time
+	RequestInternetServiceCount int
+	RequestInternetServiceName  string
+	StartAaaAccountingTime      time.Time
+	StartAaaAccountingCount     int
+	VolumeLimitMonitorTime      time.Time
+	VolumeLimitMonitorCount     int
+	Price                       float64
+	Product                     string
+	Description                 string
+	OrderId                     string
+	StateResult                 string
+	PlanID                      string
+	DeviceId                    string
+	//WanIP                       string
+}
+
+func (usd *UserSessionData) updateUserSessionDataWithLogUserPurchaseCommand(lupc LogUserPurchaseCommand) {
+	if usd.RequestInternetServiceTime.IsZero() {
+		usd.LogUserPurchaseCommandTime = lupc.Time
+		usd.Description = lupc.Description
+		usd.Price = lupc.Price
+		usd.Product = lupc.Product
+		usd.OrderId = lupc.OrderId
+		usd.StateResult = lupc.StateResult
+		usd.PlanID = lupc.PlanID
+		usd.DeviceId = lupc.DeviceId
+		usd.LogUserPurchaseCommandCount = 1
+	} else {
+		usd.LogUserPurchaseCommandCount++
+	}
+}
+func (usd *UserSessionData) updateUserSessionDataWithRequestInternetService(ris RequestInternetService) {
+	if usd.RequestInternetServiceTime.IsZero() {
+		usd.RequestInternetServiceTime = ris.Time
+		usd.RequestInternetServiceName = ris.ServiceName
+		usd.RequestInternetServiceCount = 1
+	} else {
+		usd.RequestInternetServiceCount++
+	}
+}
+func (usd *UserSessionData) updateUserSessionDataWithVolumeLimitMonitor(vlm VolumeLimitMonitor) {
+	if usd.VolumeLimitMonitorTime.IsZero() {
+		usd.VolumeLimitMonitorTime = vlm.Time
+		usd.VolumeLimitMonitorCount = 1
+	} else {
+		usd.VolumeLimitMonitorCount++
+	}
+}
+func (usd *UserSessionData) updateUserSessionDataWithStartAaaAccounting(saa StartAaaAccounting) {
+	if usd.StartAaaAccountingTime.IsZero() {
+		usd.StartAaaAccountingTime = saa.Time
+		usd.StartAaaAccountingCount = 1
+	} else {
+		usd.StartAaaAccountingCount++
+	}
+}
+
+//Work on this later
+//This is it.
+//Ensure that outside requests are limited
+//There is an assumption that the arrays of EnglogEventsResults are in cron order
+/*type EnglogEventsResults struct {
+	FileName               string
+	FlightPhases           []EnglogEvent
+	Reboots                []EnglogEvent
+	EnglogPoints           []EnglogPoint
+	FkalMgrUpdateInternet  []FkalMgrUpdateInternet
+	UserReg                []UserReg
+	LogUserPurchaseCommand []LogUserPurchaseCommand
+	RequestInternetService []RequestInternetService
+	StartAaaAccounting     []StartAaaAccounting
+	VolumeLimitMonitor     []VolumeLimitMonitor
+	FingerPrintResults     map[string][]FingerPrint
+}*/
+func UserSessionsEng(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	ParserName := "EnglogEvents"
+	Airline := ""
+	TailId := ""
+	FlightId := ""
+	DateYYYYMMDD := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "FlightId":
+				FlightId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := ms.FindRgxMatchInEnglogEvents(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+	regUsers := make(map[string]int)
+	//lupcUniqUsers := make(map[string]int)
+	//risUserCnt := make(map[string]int)
+
+	UserSessionDatas := []UserSessionData{}
+	for _, ev := range data {
+		//count user reg for each user and create then aappend UserSessionData struct
+		for _, UserReg := range ev.UserReg {
+			if urCount, ok := regUsers[UserReg.UserId]; ok {
+				regUsers[UserReg.UserId] = urCount + 1
+			} else {
+				regUsers[UserReg.UserId] = 1
+				usd := UserSessionData{}
+				usd.UserId = UserReg.UserId
+				usd.CreationTime = UserReg.CommandTime
+				//LogUserPurchaseCommand
+				for _, lupc := range ev.LogUserPurchaseCommand {
+					if usd.UserId == lupc.UserId {
+						usd.updateUserSessionDataWithLogUserPurchaseCommand(lupc)
+					}
+				}
+				//RequestInternetService
+				for _, ris := range ev.RequestInternetService {
+					if usd.UserId == ris.UserId {
+						usd.updateUserSessionDataWithRequestInternetService(ris)
+					}
+				}
+				//StartAaaAccounting
+				for _, saa := range ev.StartAaaAccounting {
+					if usd.UserId == saa.UserId {
+						usd.updateUserSessionDataWithStartAaaAccounting(saa)
+					}
+				}
+				//VolumeLimitMonitor
+				for _, vlm := range ev.VolumeLimitMonitor {
+					if usd.UserId == vlm.UserId {
+						usd.updateUserSessionDataWithVolumeLimitMonitor(vlm)
+					}
+				}
+				//fmt.Println(UserReg.CreationTime, UserReg.UserId, ev.FileName)
+				/*prod := ""
+				if usd.Product == "" {
+					prod = "NO LogPurchase"
+				} else {
+					prod = usd.Product
+				}
+				risService := ""
+				if usd.RequestInternetServiceName == "" {
+					risService = "NO risService"
+				} else {
+					risService = usd.RequestInternetServiceName
+				}
+				fmt.Println(usd.CreationTime, usd.UserId, usd.LogUserPurchaseCommandTime,
+					usd.RequestInternetServiceTime, prod, risService)*/
+				if usd.RequestInternetServiceName != "" || usd.Product != "" {
+					fmt.Println(usd.CreationTime, usd.UserId, usd.StartAaaAccountingTime,
+						usd.RequestInternetServiceTime, usd.LogUserPurchaseCommandTime,
+						usd.Product, usd.RequestInternetServiceName)
+				}
+				UserSessionDatas = append(UserSessionDatas, usd)
+			}
+		}
+
+		//LogUserPurchaseCommand
+		/*for _, lupc := range ev.LogUserPurchaseCommand {
+			//fmt.Println(lupc.Time, lupc.UserId, lupc)
+			if lupcCount, ok := lupcUniqUsers[lupc.UserId]; ok {
+				lupcUniqUsers[lupc.UserId] = lupcCount + 1
+			} else {
+				lupcUniqUsers[lupc.UserId] = 1
+				for _, usd := range UserSessionDatas {
+					if usd.UserId == lupc.UserId {
+						//Need way to update
+						usd.updateUserSessionDataWithLogUserPurchaseCommand(lupc)
+					}
+				}
+			}
+		}
+
+		for _, ris := range ev.RequestInternetService {
+			fmt.Println(ris.Time, ris.UserId, ris.ServiceName)
+			if risCount, ok := risUserCnt[ris.UserId]; ok {
+				risUserCnt[ris.UserId] = risCount + 1
+			} else {
+				risUserCnt[ris.UserId] = 1
+			}
+		}
+		for userId, cnt := range lupcUniqUsers {
+			fmt.Println(userId, cnt, risUserCnt[userId])
+		}
+
+		for _, ris := range ev.RequestInternetService {
+			fmt.Println(ris.Time, ris.UserId, ris.ServiceName)
+		}
+		fmt.Println(ev.FileName)*/
+	}
+	/*for _, usd := range UserSessionDatas {
+		if usd.LogUserPurchaseCommandCount > 0 {
+			fmt.Println(usd.CreationTime, usd.UserId, usd.LogUserPurchaseCommandTime, usd.RequestInternetServiceTime, usd.Product)
+		}
+	}*/
+
+	enc := json.NewEncoder(res)
+	enc.Encode(UserSessionDatas)
+	fmt.Println(req.Method, "UserSessionsEng with Airline:", Airline, "ParserName", ParserName, "Records found: ", len(data))
+	fmt.Println(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+}
+func PortalPlatformData(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "CVM_ACCESS"
+	Airline := ""
+	TailId := ""
+	FlightId := ""
+	DateYYYYMMDD := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "FlightId":
+				FlightId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := ms.GetPortalPlatformData(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+
+	fmt.Println(req.Method, "GetPortalPlatformData with Airline:", Airline, "ParserName", ParserName)
+	fmt.Println(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+}
+func PortalPlatformHttpStatusResponses(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "CVM_ACCESS"
+	Airline := ""
+	TailId := ""
+	DateYYYYMMDD := ""
+	FlightId := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "FlightId":
+				FlightId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := ms.GetPortalPlatformHttpStatusResponses(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+
+	fmt.Println(req.Method, "GetPortalPlatformHttpStatusResponses with Airline:", Airline, "ParserName", ParserName)
+	fmt.Println(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+}
+func PortalPlatformMethodPUTTimeAndData(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "CVM_ACCESS"
+	Airline := ""
+	TailId := ""
+	DateYYYYMMDD := ""
+	FlightId := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "FlightId":
+				FlightId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := ms.GetPortalPlatformMethodPUTTimeAndData(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+
+	fmt.Println(req.Method, "GetPortalPlatformMethodPUTTimeAndData with Airline:", Airline, "ParserName", ParserName)
+	fmt.Println(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+}
+func PortalPlatformMethodDeleteTimeAndData(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "CVM_ACCESS"
+	Airline := ""
+	TailId := ""
+	DateYYYYMMDD := ""
+	FlightId := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "FlightId":
+				FlightId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := ms.GetPortalPlatformMethodDeleteTimeAndData(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+
+	fmt.Println(req.Method, "GetPortalPlatformMethodDeleteTimeAndData with Airline:", Airline, "ParserName", ParserName)
+	fmt.Println(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+}
+func PortalPlatformMethodGETTimeAndData(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "CVM_ACCESS"
+	Airline := ""
+	TailId := ""
+	DateYYYYMMDD := ""
+	FlightId := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "FlightId":
+				FlightId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := ms.GetPortalPlatformMethodGETTimeAndData(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+
+	fmt.Println(req.Method, "GetPortalPlatformMethodGETTimeAndData with Airline:", Airline, "ParserName", ParserName)
+	fmt.Println(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+}
+func PortalPlatformGetRequestsByLanIp(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "CVM_ACCESS"
+	Airline := ""
+	TailId := ""
+	DateYYYYMMDD := ""
+	FlightId := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "FlightId":
+				FlightId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := ms.GetPortalPlatformGetRequestsByLanIp(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+
+	fmt.Println(req.Method, "GetPortalPlatformGetRequestsByLanIp with Airline:", Airline, "ParserName", ParserName)
+	fmt.Println(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+}
+func LogPurchaseCommandFromPPAccess(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "CVM_ACCESS"
+	Airline := ""
+	TailId := ""
+	DateYYYYMMDD := ""
+	FlightId := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "FlightId":
+				FlightId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := ms.GetLogPurchaseCommandFromPPAccess(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+
+	fmt.Println(req.Method, "GetLogPurchaseCommandFromPPAccess with Airline:", Airline, "ParserName", ParserName)
+	fmt.Println(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+}
+func LogPurchaseCommandFromEnglog(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "EnglogEvents"
+	Airline := ""
+	TailId := ""
+	DateYYYYMMDD := ""
+	FlightId := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "FlightId":
+				FlightId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := ms.GetLogPurchaseCommandFromEnglog(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+
+	fmt.Println(req.Method, "GetLogPurchaseCommandFromEnglog with Airline:", Airline, "ParserName", ParserName)
+	fmt.Println(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+}
+
+func MonitSummarizer(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "MonitSummary"
 	Airline := ""
 	TailId := ""
 	DateYYYYMMDD := ""
@@ -318,7 +805,14 @@ func GetLogOffload(res http.ResponseWriter, req *http.Request) {
 	}
 	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
 	defer ms.DisconnectFromMongo()
-}*/
+	data := ms.GetProcessRestarts(Airline + "_" + TailId + "_" + ".*" + "_" + DateYYYYMMDD)
+
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+
+	fmt.Println(req.Method, "MonitSummarizer with Airline:", Airline, "ParserName", ParserName)
+	fmt.Println(Airline + "_" + TailId + "_" + ".*" + "_" + DateYYYYMMDD)
+}
 func SWVersions(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	ParserName := "SWVersionsSES"
@@ -359,12 +853,11 @@ func GetSWVersionsFromMongo(Airline string, Date string, ms *MgSession) []Softwa
 	data := ms.FindRgxMatchInSoftwareVersions(Airline + "_" + ".*" + "_" + ".*" + "_" + Date)
 	versionMap := make(map[string]SoftwareVersionLegacyResults)
 	for _, swVerions := range data {
-
 		TakeOff, _ := time.Parse("2006-01-02T15:04:05Z", swVerions.TakeOff)
 		if sw, ok := versionMap[swVerions.TailId]; ok {
 			highestDateSofar, _ := time.Parse("2006-01-02T15:04:05Z", sw.TakeOff)
 			if TakeOff.After(highestDateSofar) {
-				versionMap[sw.TailId] = sw
+				versionMap[sw.TailId] = swVerions
 			}
 		} else {
 			versionMap[swVerions.TailId] = swVerions
@@ -375,19 +868,18 @@ func GetSWVersionsFromMongo(Airline string, Date string, ms *MgSession) []Softwa
 		versions = append(versions, version)
 	}
 	return versions
-
 }
 func GetSWVersionsSESFromMongo(Airline string, Date string, ms *MgSession) []SoftwareVersionSesResults {
 	data := ms.FindRgxMatchInSoftwareVersionsSES(Airline + "_" + ".*" + "_" + ".*" + "_" + Date)
 	versionMap := make(map[string]SoftwareVersionSesResults)
 	for _, swVerions := range data {
-
 		TakeOff, _ := time.Parse("2006-01-02T15:04:05Z", swVerions.TakeOff)
 		if sw, ok := versionMap[swVerions.TailId]; ok {
 			highestDateSofar, _ := time.Parse("2006-01-02T15:04:05Z", sw.TakeOff)
 			if TakeOff.After(highestDateSofar) {
-				versionMap[sw.TailId] = sw
+				versionMap[sw.TailId] = swVerions
 			}
+
 		} else {
 			versionMap[swVerions.TailId] = swVerions
 		}
@@ -646,6 +1138,57 @@ func GetFlightIdAndDateFromFileName(FileName string) string {
 		return FlightId + "_" + Date + "Z"
 	}
 	return FileName
+}
+func FleetHealthAirlineAgg(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "FPMfastSES"
+	Airline := ""
+	DateYYYYMMDD := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	if Airline != "SPIRIT" {
+		ParserName = "FPMfast"
+	}
+	ms := CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	//Get the distinct tails for that query
+	tails := ms.FindDistinctStringsFromRgxOnFilename(Airline+"_"+".*"+"_"+".*"+"_"+DateYYYYMMDD, "tailid")
+
+	var results []interface{}
+	for _, tail := range tails {
+		// ms.ConnectToCollection(ParserName)
+		data := ms.GetFleetHealthAirlineAgg(Airline + "_" + tail + "_" + ".*" + "_" + DateYYYYMMDD)
+		// ms.ConnectToCollection("UsageSummary")
+		// userCnt := ms.FindRgxMatchInCollectionAndReturnCntOfDocs(Airline + "_" + tail + "_" + ".*" + "_" + DateYYYYMMDD)
+		// userCntMap := make(map[string]int)
+		// userCntMap["TotalUsers"] = userCnt
+		// userCntWrapped := []interface{}{userCntMap}
+		// data = append(userCntWrapped, data...)
+		// enc := json.NewEncoder(res)
+		// enc.Encode(data)
+		for _, tailData := range data {
+			if tailData != "null" {
+				results = append(results, tailData)
+			}
+		}
+
+	}
+	//data := ms.GetFleetHealthAirlineAgg(Airline + "_" + ".*" + "_" + ".*" + "_" + DateYYYYMMDD)
+
+	enc := json.NewEncoder(res)
+	enc.Encode(results)
+
+	fmt.Println(req.Method, "FleetHealthAirlineAgg with Airline:", Airline, "ParserName", ParserName)
+	fmt.Println(Airline + "_" + ".*" + "_" + ".*" + "_" + DateYYYYMMDD)
 }
 func FleetHealthAirline(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()

@@ -3,7 +3,7 @@ function addAnchor(parentId, idName, link) {
 }
 function addElement (parentId, idName,typeOfElement, link) {
   // create a new div element
-  const newElement = document.createElement(typeOfElement);
+  const newElement = document.createElement("div");
   newElement.setAttribute("id", idName);
 
   if(link){
@@ -18,5 +18,22 @@ function addElement (parentId, idName,typeOfElement, link) {
 
   // add the newly created element and its content into the DOM
   const currentElement = document.getElementById(parentId);
-  document.body.insertBefore(newElement, currentElement);
+  const parentDiv = currentElement.parentNode
+  parentDiv.insertBefore(newElement, currentElement)
+  //document.body.insertBefore(newElement, currentElement);
+}
+function keyRemover(keys,keyToKeep){
+  var whileBreaker = 0
+  while((keys.length > 1) ||(whileBreaker >10)){
+    whileBreaker++
+    for (var key of keys) {
+      if (key !== keyToKeep){
+        const indexOfKey = keys.indexOf(key);
+        if (indexOfKey > -1) {
+        keys.splice(indexOfKey, 1);
+        }
+      }
+    }
+  }
+  return keys
 }

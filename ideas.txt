@@ -1,8 +1,16 @@
+?????????????????????????????????????
+BUBBLE CHART: X-TIME  Y-USERID(NUMBER)
+-do for anything user session
+-do from englog users
+GET USER SESSION INFO FROM CVM_ACCESS
+?????????????????????????????????????
+
 Bubble chart
 usage - {
 	id = userId
 	x = starttime
 	y = wanrx
+	color = plan
 	size = samples/weight
 }
 Id = name
@@ -25,8 +33,19 @@ var data = google.visualization.arrayToDataTable([
       ]);
 
 
+average Mbps over 10k
+
+
 Overall
 -create filter for domestic and international
+-update tailid,flightids,userids to use 
+FindDistinctStringsFromRgxOnFilename(rgx string, distinctId string) 
+-File listing sizes everyday
+
+Fix
+-Date entry for Fleet and TailHealth
+-Create optimized querys for Fleet and TailHealth
+
 
 New
 -Create city pair health
@@ -42,6 +61,8 @@ FleetHealth
 TailHealth
 -Process crash cnt per flight
 -SWVersion per flight (MPS/MAP versions too)
+-SWVersions table over time and breakdown
+-Defined campaigns and out of config flights
 -LRU uptime per day
 
 Single Flight Analysis
@@ -57,3 +78,13 @@ Research more on Scatter Graphs
 Research vertical Bar Graphs
 Research updating from http to https
 Research securing API
+Use stacked bar charts for 
+-user breakdown
+-HttpStatus codes
+
+Machine Learning
+-regression
+	*Number Users - time over 10k
+	*Total Usage - time over 10k / city pairs /beam ids / total users
+	*User service put count - total usage / user paid
+	

@@ -22,6 +22,30 @@ var UsageSummaryStruct = [
   ['number', 'servicetput'],
   ['string', 'producttype']
 ]
+// var UserSessionDataAllUsers = [
+//   ['datetime', 'CreationTime'],
+//   ['number', 'LogUserPurchaseCommandCount'],
+//   ['number', 'RequestInternetServiceCount'],
+//   ['number', 'StartAaaAccountingCount'],
+//   ['string', 'RequestInternetServiceName'],
+//   ['string', 'Product'],
+//   ['string', 'StateResult'],
+//   ['string', 'producttype']
+// 	UserId                      string
+// 	CreationTime                time.Time
+// 	LogUserPurchaseCommandTime  time.Time
+// 	RequestInternetServiceTime  time.Time
+// 	StartAaaAccountingTime      time.Time
+// 	VolumeLimitMonitorTime      time.Time
+// 	VolumeLimitMonitorCount     int
+// 	Price                       float64
+// 	Product                     string
+// 	Description                 string
+// 	OrderId                     string
+// 	StateResult                 string
+// 	PlanID                      string
+// 	DeviceId                    string
+// ]
 var UserHistogramStruct = [
   ['string', 'userid'],
   ['number', 'servicetput']
@@ -165,7 +189,7 @@ function getDeepDiveDataUsageSummary(QueryInfo) {
   '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
     .then(response => response.json())
     .then(info => {
-      drawTableGeneric(QueryInfo.parser,UsageSummaryStruct,'usage_table',QueryInfo,info)
+      drawTableFromFlatJson(QueryInfo.parser,UsageSummaryStruct,'usage_table',QueryInfo,info)
         QueryInfo.options = {'title':'Usage Bar Graph', showTextEvery:1, width: '100%',
             bar: {groupWidth: "95%"}}
       drawBarChartGeneric(QueryInfo.parser,UsageBarStruct,'usage_bar',QueryInfo,info)
@@ -201,43 +225,43 @@ function getDeepDiveDataUsageDetails(QueryInfo) {
     });
 }
 
-function drawPieChartUsage(parser,pieStruct,ElementId,QueryInfo,info) {
-    var chart = new google.visualization.PieChart(document.getElementById(ElementId));
-    var rows = new Array();
-    var header = new Array();
-     for (var row of pieStruct) {
-       header.push(row[2])
-     }
-     rows.push(header)
-    if(info){
-      for (var key of info) {
-        rows.push(AddRowsToTableBasedOnPieUsageStructAndFlatJson(pieStruct, key))
-      }
-    }
-    if (rows.length > 1) {
-    /*var rowsClean = new Array();
-    rowsClean.push(header)
-    //rows
-    ["N659NK_20210401121727_22", ["Wan Rx - Paid", 0 ] ]*/
-      var data = google.visualization.arrayToDataTable(rows)
-      QueryInfo.options.width = "900px";
-      QueryInfo.options.height =  "500px";
-      chart.draw(data, QueryInfo.options);
-    } else {
-      document.getElementById(ElementId).innerHTML = "";
-      console.log("No data in")
-    }
-}
-function AddRowsToTableBasedOnPieUsageStructAndFlatJson(pieStruct, flatJson) {
-  var row = new Array();
-  for (index in pieStruct) {
-   if (pieStruct[index][0] === 'datetime') {
-     row.push(new Date(flatJson[pieStruct[index][1]]))
-   } else if (pieStruct[index][0] === 'number') {
-     row.push(Number(flatJson[pieStruct[index][1]]))
-   } else {
-     row.push(flatJson[pieStruct[index][1]])
-   }
- }
- return row
-}
+// function drawPieChartUsage(parser,pieStruct,ElementId,QueryInfo,info) {
+//     var chart = new google.visualization.PieChart(document.getElementById(ElementId));
+//     var rows = new Array();
+//     var header = new Array();
+//      for (var row of pieStruct) {
+//        header.push(row[2])
+//      }
+//      rows.push(header)
+//     if(info){
+//       for (var key of info) {
+//         rows.push(AddRowsToTableBasedOnPieUsageStructAndFlatJson(pieStruct, key))
+//       }
+//     }
+//     if (rows.length > 1) {
+//     /*var rowsClean = new Array();
+//     rowsClean.push(header)
+//     //rows
+//     ["N659NK_20210401121727_22", ["Wan Rx - Paid", 0 ] ]*/
+//       var data = google.visualization.arrayToDataTable(rows)
+//       QueryInfo.options.width = "900px";
+//       QueryInfo.options.height =  "500px";
+//       chart.draw(data, QueryInfo.options);
+//     } else {
+//       document.getElementById(ElementId).innerHTML = "";
+//       console.log("No data in")
+//     }
+// }
+// function AddRowsToTableBasedOnPieUsageStructAndFlatJson(pieStruct, flatJson) {
+//   var row = new Array();
+//   for (index in pieStruct) {
+//    if (pieStruct[index][0] === 'datetime') {
+//      row.push(new Date(flatJson[pieStruct[index][1]]))
+//    } else if (pieStruct[index][0] === 'number') {
+//      row.push(Number(flatJson[pieStruct[index][1]]))
+//    } else {
+//      row.push(flatJson[pieStruct[index][1]])
+//    }
+//  }
+//  return row
+// }
