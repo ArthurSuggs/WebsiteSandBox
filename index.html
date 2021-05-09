@@ -74,11 +74,19 @@
       <div id="fleet_health_cabin_signal_line"></div><br>
       <div id="fleet_health_gnd_line"></div><br>
       <div id="fleet_health_users_hist"></div><br>
+      <label for="fpm_table">Scores 10k to 10k over the date range by tails (SYSEVT)</label><br>
 		  <div id="fpm_table"></div><br>
+      <label for="software_table">Latest software versions over the date range by tails (SYSCFG)</label><br>
 		  <div id="software_table"></div>
 
+      <script src="DateHelper.js"></script>
+      <script src="Cookies.js"></script>
+      <script src="IdGetter.js"></script>
+      <script src="Misc.js"></script>
       <script src="GraphingUtils.js"></script>
-		  <script src="GrapherFh.js"></script>
+      <script src="Controller.js"></script>
+      <script src="FleetHealthModels.js"></script>
+		  <script src="FleetHealthGrapher.js"></script>
 
   </div>
    <!--end of Main Content page-->

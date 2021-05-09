@@ -10,7 +10,9 @@ function setUserStateCookies(Airline,TailId, FlightId,UserId,DateYYYYMMDD) {
 }
 function getUserStateCookies() {
   document.getElementById("Airline").value = getCookie("Airline");
-  addOptionToSelect(getCookie("Tail"), "Tail")
+  if(document.getElementById("Tail")){
+    addOptionToSelect(getCookie("Tail"), "Tail")
+  }
   //document.getElementById("Tail").value = getCookie("Tail");
   if(document.getElementById("FlightId")){
     document.getElementById("FlightId").value = getCookie("FlightId");

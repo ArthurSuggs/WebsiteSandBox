@@ -552,7 +552,11 @@ function drawTableFromFlatJson(parser,genStruct,ElementId,QueryInfo,info) {
       if (rows.length > 0) {
         rows.sort(sortFunction);
         data.addRows(rows);
-        table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+        if (parser.includes("FPMfast")||parser.includes("FleetHealth")||parser.includes("UdpTraceSummary")){
+          data = createAndApplyColorFormatters(genStruct,data)
+        }
+
+        table.draw(data, {allowHtml: true,showRowNumber: true, width: '100%', height: '100%'});
       } else {
         document.getElementById(ElementId).innerHTML = "";
         console.log("No data in")
@@ -1032,6 +1036,79 @@ function AddRowsToTableBasedOnGenericStructAndFlatJson(genStruct, flatJson) {
     }
   }
   return row
+}
+//Get options from selections in webpage.
+//Dynamicly add columns to the generic struct
+//createColorFormatters() detects the extra columns and
+//Then creates an array of arrays where each array is an index and
+//a formatter that needs to be applied to that index in the data
+function CreateAndReturnColorFormatter(){
+  var formatter = new google.visualization.ColorFormat();
+  //range for color start, end, text color, cell color
+  formatter.addRange(0, 71, 'white', 'red');
+  formatter.addRange(71, 92, 'white', 'orange');
+  formatter.addRange(91, 97, 'black', 'yellow');
+  formatter.addRange(98, 101, 'black', 'green');
+  return formatter
+}
+//returns an array of [index, formatter] arrays
+//iterate through and use formatter to format the data at each index
+// range for color start, end, text color, cell color
+// formatter.addRange(formatData.start, formatData.end, formatData.textColor, formatData.cellColor);
+function createAndApplyColorFormatters(genStruct,data){
+  var indexFormatDataArrays = new Array();
+  for (index in genStruct) {
+    if (Array.isArray(genStruct[index][2])){
+      var formatDataArray = genStruct[index][2]
+      for(var formatData of formatDataArray){
+        indexFormatDataArrays.push([index,formatData])
+      }
+    }
+  }
+  return applyColorFormatters(indexFormatDataArrays, data)
+}
+//you must add all the ranges foreach the formatters of the same column before formatting
+function applyColorFormatters(indexFormatDataArrays, data){
+  //range for color start, end, text color, cell color
+  var previousIndex = 0
+  var index = 0
+  var formatter = new google.visualization.ColorFormat();
+
+  for(var indexFormatDataArray of indexFormatDataArrays){
+    index = parseInt(indexFormatDataArray[0])
+    var formatData = indexFormatDataArray[1]
+    //only format when we get to a new index
+    if ((index === previousIndex) || (previousIndex === 0)){
+      formatter.addRange(formatData.start, formatData.end, formatData.textColor, formatData.cellColor);
+    } else {
+      //Indexes changed so
+      //format
+      //Create new
+      //Update
+      formatter.format(data, previousIndex);
+      formatter = new google.visualization.ColorFormat();
+      formatter.addRange(formatData.start, formatData.end, formatData.textColor, formatData.cellColor);
+    }
+    previousIndex = index
+  }
+  //this handles the last iteration
+  formatter.format(data, index);
+  return data
+}
+function addFormatInfoToArray(genStruct,formatDetails){
+  var newGenStruct = new Array();
+  for (index in genStruct) {
+    if(genStruct[index][1] === formatDetails.name){
+      newGenStruct.push([genStruct[index][0],genStruct[index][1],formatDetails.formatDetails])
+    } else {
+      if(genStruct[index].length === 2){
+        newGenStruct.push([genStruct[index][0],genStruct[index][1]])
+      } else if (genStruct[index].length === 3) {
+        newGenStruct.push([genStruct[index][0],genStruct[index][1],genStruct[index][2]])
+      }
+    }
+  }
+  return newGenStruct
 }
 function CreateSeriesFromGenStruct(genStruct){
   var newSer = {}
