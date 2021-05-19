@@ -80,6 +80,7 @@ var AAUGraphSESStruct = {'aaugraphses': [
   ['number', 'linkstate'],
   ['number', 'flsignalqual'],
   ['number', 'bytesrxair'],
+  ['number', 'bytestxair'],
   ['number', 'altitude'],
 ]}
 

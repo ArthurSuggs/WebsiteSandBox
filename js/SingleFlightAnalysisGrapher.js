@@ -185,10 +185,12 @@ function getEnglogEvents(QueryInfo){
       QueryInfo.options = UserRegOptions
       drawtimelineOneNameTwoTimes(QueryInfo.parser,UserRegStruct,'usage_time_line',QueryInfo,info)
       drawtimelineOneNameTwoTimes(QueryInfo.parser,FlightPhasesStruct,'flightphase_time_line',QueryInfo,info)
-      // drawTableFromOneDeepJson(QueryInfo.parser,LogUserPurchaseCommandStruct,'log_purchase_command_table',QueryInfo,info)
-      // drawTableFromOneDeepJson(QueryInfo.parser,RequestInternetServiceStruct,'request_internet_service_table',QueryInfo,info)
-      // drawTableFromOneDeepJson(QueryInfo.parser,StartAAAaccountingStruct,'start_aaaaccounting_table',QueryInfo,info)
-      // drawTableFromOneDeepJson(QueryInfo.parser,UserRegistrationCommandStruct,'user_registration_command_table',QueryInfo,info)
+      if(getTablesSelection()){
+        drawTableFromOneDeepJson(QueryInfo.parser,LogUserPurchaseCommandStruct,'log_purchase_command_table',QueryInfo,info)
+        drawTableFromOneDeepJson(QueryInfo.parser,RequestInternetServiceStruct,'request_internet_service_table',QueryInfo,info)
+        drawTableFromOneDeepJson(QueryInfo.parser,StartAAAaccountingStruct,'start_aaaaccounting_table',QueryInfo,info)
+        drawTableFromOneDeepJson(QueryInfo.parser,UserRegistrationCommandStruct,'user_registration_command_table',QueryInfo,info)
+      }
       QueryInfo.options = {'title':"User Registration Command - Histogram", showTextEvery:1, width: '100%',
            bar: {groupWidth: "95%"}}
       drawHistogramFromOnlyArrayOfNamesGeneric(QueryInfo.parser,UserRegistrationCommandHistogramStruct,'user_registration_command_hist',QueryInfo,info)
