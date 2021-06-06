@@ -206,3 +206,10 @@ var UdpTraceSummaryStruct = [
    ['datetime', 'startof10k'],
    ['datetime', 'endof10k']
  ]
+var EngNoteStruct = [
+	['string', 'TailId'],
+	['string', 'FlightId'],
+	['string', 'Classification'],
+	['string', 'DataEntry'],
+	['datetime', 'EntryTime']
+]

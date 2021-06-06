@@ -1,5 +1,5 @@
 //var webserver = 'http://MLB-M4244:8080/'
-var webserver = 'http://localhost:8080/'
+//var webserver = 'http://localhost:8080/'
 
 RegisterGrapher(DeepDiveFlytNet,"Refresh","click")
 var WapDataOptions = {chart: { title: "WapData"},width: '100%'};

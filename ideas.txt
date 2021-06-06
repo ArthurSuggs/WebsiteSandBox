@@ -3,36 +3,16 @@ BUBBLE CHART: X-TIME  Y-USERID(NUMBER)
 -do for anything user session
 -do from englog users
 GET USER SESSION INFO FROM CVM_ACCESS
+AND PVM_APACHE
+"POST /api/analytics/page_impression?pageLink=https://spiritwifi.com/plan-selection&l
+
 ?????????????????????????????????????
 
-Bubble chart
-usage - {
-	id = userId
-	x = starttime
-	y = wanrx
-	color = plan
-	size = samples/weight
-}
-Id = name
-life expectancy = x
-fertility rate = y
-region = color
-population = size
-var data = google.visualization.arrayToDataTable([
-        ['ID', 'Life Expectancy', 'Fertility Rate', 'Region',     'Population'],
-        ['CAN',    80.66,              1.67,      'North America',  33739900],
-        ['DEU',    79.84,              1.36,      'Europe',         81902307],
-        ['DNK',    78.6,               1.84,      'Europe',         5523095],
-        ['EGY',    72.73,              2.78,      'Middle East',    79716203],
-        ['GBR',    80.05,              2,         'Europe',         61801570],
-        ['IRN',    72.49,              1.7,       'Middle East',    73137148],
-        ['IRQ',    68.09,              4.77,      'Middle East',    31090763],
-        ['ISR',    81.55,              2.96,      'Middle East',    7485600],
-        ['RUS',    68.6,               1.54,      'Europe',         141850000],
-        ['USA',    78.09,              2.05,      'North America',  307007000]
-      ]);
 
-
+Add Surveys with visuals
+db.Surveys.aggregate([{$group:{_id:"$tail",total:{$sum:1}}}])
+db.Surveys.aggregate([{$match:{tail:/659/}},{$group:{_id:"$classification",total:{$sum:1}}}]) 
+Add Eng Notes to sfa
 average Mbps over 10k
 
 
@@ -87,4 +67,80 @@ Machine Learning
 	*Number Users - time over 10k
 	*Total Usage - time over 10k / city pairs /beam ids / total users
 	*User service put count - total usage / user paid
-	
+
+
+//Get redirects while 10K to 10K 
+ 
+/error/no-service
+
+//People who purchased plan
+db.CVM_ACCESS.aggregate([
+... {$match:{"filename": /N659NK_NKS208_20210512/}},
+...   {$unwind: "$accesslineinfo"},
+...   {$match:{"accesslineinfo.url": /log_purchase/}},
+...   {$group:{_id:"$accesslineinfo.url", Total:{$sum:1}}},
+...   {$project:{"_id":1,"accesslineinfo.datetime":1,"accesslineinfo.url":1,"accesslineinfo.httpstatusresponse":1,"accesslineinfo.method":1}}
+... ])
+{ "_id" : "/portal-platform/Spirit/users/N659NK_20210512041428_27/log_purchases " }
+{ "_id" : "/portal-platform/Spirit/users/N659NK_20210512041428_28/log_purchases " }
+{ "_id" : "/portal-platform/Spirit/users/N659NK_20210512041428_23/log_purchases " }	
+db.CVM_ACCESS.aggregate([
+... {$match:{"filename": /N659NK_NKS208_20210512/}},
+...   {$unwind: "$accesslineinfo"},
+...   {$match:{"accesslineinfo.url": /172.16.69.186/}},
+...   {$project:{"_id":1,"accesslineinfo.datetime":1,"accesslineinfo.url":1,"accesslineinfo.httpstatusresponse":1,"accesslineinfo.method":1}}
+... ])
+
+//People who went to plan selection page. - 2 POST an IP equals purchase.
+//PVM-APACHE2-ACCESS 
+172.16.66.244 - - [12/May/2021:05:22:22 +0000] "POST /api/analytics/page_impression?pageLink=https://spiritwifi.com/plan-selection&lang=en-US HTTP/1.1" 201 35
+172.16.66.244 - - [12/May/2021:05:23:18 +0000] "POST /api/analytics/page_impression?pageLink=https://spiritwifi.com/plan-selection&lang=en-US HTTP/1.1" 201 35
+172.16.69.186 - - [12/May/2021:05:23:44 +0000] "POST /api/analytics/page_impression?pageLink=https://spiritwifi.com/plan-selection&lang=en-US HTTP/1.1" 201 35
+172.16.67.193 - - [12/May/2021:05:40:04 +0000] "POST /api/analytics/page_impression?pageLink=https://spiritwifi.com/plan-selection&lang=en-US HTTP/1.1" 201 35
+172.16.68.44 - - [12/May/2021:05:40:27 +0000] "POST /api/analytics/page_impression?pageLink=https://spiritwifi.com/plan-selection&lang=en-US HTTP/1.1" 201 35
+172.16.68.44 - - [12/May/2021:05:48:33 +0000] "POST /api/analytics/page_impression?pageLink=https://spiritwifi.com/plan-selection&lang=en-US HTTP/1.1" 201 35
+172.16.67.168 - - [12/May/2021:06:01:59 +0000] "POST /api/analytics/page_impression?pageLink=https://spiritwifi.com/plan-selection&lang=en-US HTTP/1.1" 201 35
+172.16.67.168 - - [12/May/2021:06:15:36 +0000] "POST /api/analytics/page_impression?pageLink=https://spiritwifi.com/plan-selection&lang=en-US HTTP/1.1" 201 35
+
+//////
+assets
+.js
+api
+assets
+
+db.CVM_ACCESS.aggregate([
+... {$match:{"filename": /N659NK_NKS1695_20210504/}},
+...   {$unwind: "$accesslineinfo"},
+...   {$match:{"accesslineinfo.url": /log_purchase/}},
+...   {$group:{_id:"$accesslineinfo.url", Total:{$sum:1}}},
+...   {$project:{"_id":1,"accesslineinfo.datetime":1,"accesslineinfo.url":1,"accesslineinfo.httpstatusresponse":1,"accesslineinfo.method":1}}
+... ])
+
+{ "_id" : "/portal-platform/Spirit/users/N680NK_20210425172916_5/log_purchases " }
+{ "_id" : "/portal-platform/Spirit/users/N680NK_20210425172916_61/log_purchases " }
+{ "_id" : "/portal-platform/Spirit/users/N680NK_20210425172916_14/log_purchases " }
+{ "_id" : "/portal-platform/Spirit/users/N680NK_20210425172916_46/log_purchases " }
+{ "_id" : "/portal-platform/Spirit/users/N680NK_20210425172916_70/log_purchases " }
+
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.67.185&field_set=all " }
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.67.162&field_set=all " }
+
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.65.215&field_set=all " }
+
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.68.31&field_set=all " }
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.65.247&field_set=all " }
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.71.84&field_set=all " }
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.67.133&field_set=all " }
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.67.252&field_set=all " }
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.67.124&field_set=all " }
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.67.178&field_set=all " }
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.70.56&field_set=all " }
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.67.143&field_set=all " }
+
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.68.142&field_set=all " }
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.67.97&field_set=all " }
+
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.70.57&field_set=all " }
+{ "_id" : "/portal-platform/Spirit/users?ip=172.16.68.20&field_set=all " }
+
+egrep -v "png|api|portal|assets|.js" 1621452086_KA_SPIRIT_N659NK_NKS208_20210512041428Z_OFFLOAD_PVM_APACHE2-ACCESS_LOG

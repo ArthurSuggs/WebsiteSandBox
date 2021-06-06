@@ -79,6 +79,14 @@ func (m *MgSession) ConnectToCollection(CollectionName string) {
 	m.Collection = m.DataBase.C(CollectionName)
 	m.Logger.Println("Connected to Collection", CollectionName)
 }
+func (m *MgSession) InsertToCollection(data Result) {
+	err := m.Collection.Insert(data)
+	if err == nil {
+		//m.Logger.Println(m.DataBaseName, m.CollectionName, " Inserted ", data.ResultToJson())
+	} else {
+		m.Logger.Println(err)
+	}
+}
 func (m *MgSession) CreateIndexInCollection(IndexKey string) {
 	err := m.Collection.EnsureIndexKey(IndexKey)
 	if err == nil {
@@ -98,6 +106,11 @@ func (m *MgSession) DeleteFromCollection(indexedName string, indexedValue string
 }
 
 func (m *MgSession) FindAllInCollection(indexedName string, indexedValue string) []interface{} {
+	var result []interface{}
+	m.Collection.Find(bson.M{indexedName: indexedValue}).All(&result)
+	return result
+}
+func (m *MgSession) FindIdInCollection(indexedName string, indexedValue bson.ObjectId) []interface{} {
 	var result []interface{}
 	m.Collection.Find(bson.M{indexedName: indexedValue}).All(&result)
 	return result
@@ -123,6 +136,17 @@ func (m *MgSession) FindRgxMatchInDarkCollection(findid string, rgx string) []Da
 	return res
 }
 
+func (m *MgSession) FindRgxMatchInSurveyCollection(findid string, rgx string) []interface{} {
+	var res []interface{}
+	fmt.Println(m.Collection.Find(bson.M{
+		findid: bson.RegEx{
+			Pattern: rgx,
+			Options: "i",
+		},
+	}).All(&res))
+	return res
+}
+
 func (m *MgSession) FindRgxMatchInCollection(rgx string) []interface{} {
 	var res []interface{}
 	fmt.Println(m.Collection.Find(bson.M{
@@ -133,7 +157,16 @@ func (m *MgSession) FindRgxMatchInCollection(rgx string) []interface{} {
 	}).All(&res))
 	return res
 }
-
+func (m *MgSession) FindEngNotesForFlight(flightid string) []EngNotes {
+	result := []EngNotes{}
+	m.Collection.Find(bson.M{
+		"flightid": bson.RegEx{
+			Pattern: flightid,
+			Options: "i",
+		},
+	}).All(&result)
+	return result
+}
 func (m *MgSession) FindRgxMatchInFPMfastSES(rgx string) []SysevtResults {
 	var res []SysevtResults
 	fmt.Println(m.Collection.Find(bson.M{
@@ -541,6 +574,102 @@ func (m *MgSession) GetFleetHealthAirlineAgg(rgx string) []interface{} {
 	col := m.Collection
 	pipe := col.Pipe(operations)
 	// Run the queries and capture the results
+	err := pipe.All(&res)
+	if nil != err {
+		fmt.Println(err)
+	}
+	return res
+}
+
+//Get uniq classifications and count from a tail or fleet
+func (m *MgSession) GetSurveyClass(rgx string) []interface{} {
+	var res []interface{}
+	o1 := bson.M{"$match": bson.M{"tail": bson.M{"$regex": rgx}}}
+
+	o2 := bson.M{"$group": bson.M{"_id": "$classification",
+		"Total": bson.M{"$sum": 1}}}
+
+	o3 := bson.M{"$project": bson.M{"_id": 0,
+		"Classification": "$_id",
+		"Total":          1,
+	}}
+
+	operations := []bson.M{o1, o2, o3}
+	col := m.Collection
+	pipe := col.Pipe(operations)
+
+	err := pipe.All(&res)
+	if nil != err {
+		fmt.Println(err)
+	}
+	return res
+}
+
+type SurveyIdHolder struct {
+	Id             bson.ObjectId `bson:"_id,omitempty"`
+	Classification string        `bson:"classification,omitempty"`
+	Issuesyn       string
+	Overall        string
+}
+
+func (m *MgSession) SetSurveyClass(choppedTail string, month string, day string, cleanFlightId string, classificationFromWeb string, DataEntry string) bool {
+	var idHolder []SurveyIdHolder
+	o1 := bson.M{"$match": bson.M{"tail": bson.M{"$regex": choppedTail}}}
+	o2 := bson.M{"$match": bson.M{"month": bson.M{"$regex": month}}}
+	o3 := bson.M{"$match": bson.M{"day": bson.M{"$regex": "^" + day + "$"}}}
+	o4 := bson.M{"$match": bson.M{"flightid": bson.M{"$regex": cleanFlightId}}}
+	//o5 := bson.M{"$project": bson.M{"_id": 0, "Issuesyn": "$issuesyn", "Id": "$_id"}}
+	operations := []bson.M{o1, o2, o3, o4}
+	col := m.Collection
+	pipe := col.Pipe(operations)
+
+	err := pipe.All(&idHolder)
+	if nil != err {
+		fmt.Println(err)
+	} else {
+		//There are more than one survey per flight
+		for _, sur := range idHolder {
+			fmt.Println(sur.Id)
+			Classification := ""
+			Notes := ""
+			if sur.Issuesyn == "No" {
+				Classification = sur.Overall
+				Notes = DataEntry
+			} else {
+				Classification = classificationFromWeb
+				Notes = DataEntry
+			}
+			infoM, err := col.UpdateAll(bson.M{"_id": sur.Id}, bson.M{"$set": bson.M{"classification": Classification, "notes": Notes}})
+
+			if infoM.Updated < 1 {
+				fmt.Println(err)
+				return false
+				// fmt.Println("_id", sur.Id, "Not Updated")
+				// fmt.Println(m.FindIdInCollection("_id", sur.Id))
+			}
+		}
+	}
+	return true
+}
+
+func (m *MgSession) GetEngNotesTailClass(Tailrgx string, Datergx string) []interface{} {
+	var res []interface{}
+	o1 := bson.M{"$match": bson.M{"tailid": bson.M{"$regex": Tailrgx}}}
+
+	o2 := bson.M{"$match": bson.M{"dateyyyymmdd": bson.M{"$regex": Datergx}}}
+
+	o3 := bson.M{"$group": bson.M{"_id": "$classification",
+		"Total": bson.M{"$sum": 1}}}
+
+	o4 := bson.M{"$project": bson.M{"_id": 0,
+		"Classification": "$_id",
+		"Total":          1,
+	}}
+
+	operations := []bson.M{o1, o2, o3, o4}
+	col := m.Collection
+	pipe := col.Pipe(operations)
+
 	err := pipe.All(&res)
 	if nil != err {
 		fmt.Println(err)

@@ -34,10 +34,16 @@ func main() {
 	http.Handle("/UserCntPerFlight", http.HandlerFunc(endpoints.UserCntPerFlightOnDateRgx))
 	http.Handle("/LogOffload", http.HandlerFunc(endpoints.GetLogOffload))
 	http.Handle("/DarkAircraft", http.HandlerFunc(endpoints.DarkAircraft))
+	http.Handle("/Surveys", http.HandlerFunc(endpoints.Surveys))
+	http.Handle("/SurveyClass", http.HandlerFunc(endpoints.SurveyClass))
+	http.Handle("/EngNotesTailClass", http.HandlerFunc(endpoints.EngNotesTailClass))
 
 	//Usesd by multiple pages
 	http.Handle("/FPMfastSESandUDPTrace", http.HandlerFunc(endpoints.FPMfastSESandUDPTrace))
 	http.Handle("/mongoData", http.HandlerFunc(endpoints.MongoData))
+	http.Handle("/EngNotesSet", http.HandlerFunc(endpoints.EngNotesSet))
+	http.Handle("/EngNotesGet", http.HandlerFunc(endpoints.EngNotesGet))
+	http.Handle("/SurveysNotesSet", http.HandlerFunc(endpoints.SurveysNotesSet))
 
 	//http.Handle("/FleetHealth", http.HandlerFunc(FleetHealthAirline))
 	http.Handle("/FleetHealth", http.HandlerFunc(endpoints.FleetHealthAirlineAgg))

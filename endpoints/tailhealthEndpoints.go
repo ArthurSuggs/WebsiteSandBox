@@ -197,3 +197,126 @@ func DarkAircraft(res http.ResponseWriter, req *http.Request) {
 	enc := json.NewEncoder(res)
 	enc.Encode(data)
 }
+
+func Surveys(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "Surveys"
+	Airline := ""
+	//FlightId := ""
+	TailId := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			}
+
+		}
+	}
+	ms := common.CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	choppedTail := ""
+	//Need to translate from LTV tail to real tailNumber
+	if len(TailId) > 3 {
+		if Airline == "JETBLUE" {
+			choppedTail = TailId[1:4]
+		} else if Airline == "UNITED" {
+			choppedTail = TailId[len(TailId)-3:]
+		} else if Airline == "SPIRIT" {
+			choppedTail = TailId[1:4]
+		}
+
+	}
+	data := ms.FindRgxMatchInSurveyCollection("tail", choppedTail)
+	fmt.Println(req.Method, "Getting Survey from", ParserName)
+	fmt.Println(Airline + "_" + ".*" + "_" + choppedTail)
+
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+}
+
+func SurveyClass(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "Surveys"
+	Airline := ""
+	//FlightId := ""
+	TailId := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			}
+
+		}
+	}
+	ms := common.CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	choppedTail := ""
+	//Need to translate from LTV tail to real tailNumber
+	if len(TailId) > 3 {
+		if Airline == "JETBLUE" {
+			choppedTail = TailId[1:4]
+		} else if Airline == "UNITED" {
+			choppedTail = TailId[len(TailId)-3:]
+		} else if Airline == "SPIRIT" {
+			choppedTail = TailId[1:4]
+		}
+
+	}
+	data := ms.GetSurveyClass(choppedTail)
+	fmt.Println(req.Method, "GetSurveyClass from", choppedTail)
+	fmt.Println(Airline + "_" + ".*" + "_" + choppedTail)
+
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+}
+
+func EngNotesTailClass(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "EngNotes"
+	Airline := ""
+	//FlightId := ""
+	TailId := ""
+	DateYYYYMMDD := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+
+		}
+	}
+	ms := common.CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	choppedTail := ""
+	//Need to translate from LTV tail to real tailNumber
+	if len(TailId) > 3 {
+		if Airline == "JETBLUE" {
+			choppedTail = TailId[1:4]
+		} else if Airline == "UNITED" {
+			choppedTail = TailId[len(TailId)-3:]
+		} else if Airline == "SPIRIT" {
+			choppedTail = TailId[1:4]
+		}
+
+	}
+	data := ms.GetEngNotesTailClass(choppedTail, DateYYYYMMDD)
+	fmt.Println(req.Method, "EngNotesTailClass from", choppedTail)
+	fmt.Println(Airline + "_" + ".*" + "_" + choppedTail +"_"+ DateYYYYMMDD)
+
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+}

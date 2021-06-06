@@ -24,6 +24,55 @@ type DarkAc struct {
 	ODC_Root          string
 	Engineering_Notes string
 }
+type NksSurvey struct {
+	Plan                  string
+	Overall               string
+	IssuesYN              string
+	WhichIssues           string
+	WhichIssues2          string
+	InitialSetup          string
+	Payment               string
+	SpeedLoadingBuffering string
+	StayingConnected      string
+	IssueActivities       string
+	IssueActivities2      string
+	Improvements          string
+	Month                 string
+	Day                   string
+	Departure             string
+	Destination           string
+	Key                   string
+	Tail                  string
+	FlightId              string
+	Classification        string
+	Notes                 string
+}
+
+type EngNotes struct {
+	TailId         string
+	FlightId       string
+	DateYYYYMMDD   string
+	Classification string
+	DataEntry      string
+	EntryTime      time.Time
+}
+
+func (res EngNotes) ResultToJson() string {
+	out, err := json.Marshal(res)
+	if err != nil {
+		panic(err)
+	}
+	return string(out)
+}
+func (res EngNotes) ResultToCsv() string {
+	v := reflect.ValueOf(res)
+	var csvString string
+	for i := 0; i < v.NumField(); i++ {
+		csvString = fmt.Sprintf("%v%v,", csvString, v.Field(i).Interface())
+	}
+	return csvString
+}
+
 type ResultTimeFmt time.Time
 
 type Result interface {

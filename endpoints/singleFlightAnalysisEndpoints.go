@@ -6,6 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
+	"strings"
+	"time"
 
 	"github.com/ArthurSuggs/WebsiteSandBox/common"
 )
@@ -294,4 +297,72 @@ func PortalPlatformGetRequestsByLanIp(res http.ResponseWriter, req *http.Request
 
 	fmt.Println(req.Method, "GetPortalPlatformGetRequestsByLanIp with Airline:", Airline, "ParserName", ParserName)
 	fmt.Println(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+}
+func SurveysNotesSet(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "Surveys"
+	Airline := ""
+	FlightId := ""
+	TailId := ""
+	DataEntry := ""
+	Classification := ""
+	for key, values := range req.Form {
+		for _, value := range values { // range over []string
+			fmt.Println(key, value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "TailId":
+				TailId = value
+			case "FlightId":
+				FlightId = value
+			case "dataEntry":
+				DataEntry = value
+			case "Classification":
+				Classification = value
+			}
+
+		}
+	}
+	ms := common.CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	choppedTail := ""
+	//Need to translate from LTV tail to real tailNumber
+	if len(TailId) > 3 {
+		if Airline == "JETBLUE" {
+			choppedTail = TailId[1:4]
+		} else if Airline == "UNITED" {
+			choppedTail = TailId[len(TailId)-3:]
+		} else if Airline == "SPIRIT" {
+			choppedTail = TailId[1:4]
+		}
+
+	}
+
+	//tail flight month day
+	fltId_timeStamp := strings.Split(FlightId, "_")
+	fmt.Println(fltId_timeStamp[0], fltId_timeStamp[1])
+	flightIdTime, _ := time.Parse("20060102150405Z", fltId_timeStamp[1])
+	month := flightIdTime.Format("Jan")
+	day := flightIdTime.Format("2")
+	cleanFlightId := ""
+	enc := json.NewEncoder(res)
+	fmt.Println(day, month)
+	var RemoveLettersFromFlightId *regexp.Regexp = regexp.MustCompile("[A-Z]*([0-9]+)")
+	if RemoveLettersFromFlightId.MatchString(fltId_timeStamp[0]) {
+		matches := RemoveLettersFromFlightId.FindStringSubmatch(fltId_timeStamp[0])
+		cleanFlightId = matches[1]
+		if ms.SetSurveyClass(choppedTail, month, day, cleanFlightId, Classification, DataEntry) {
+			fmt.Println(req.Method, "SurveysNotesSet Successful for", choppedTail, month, day, cleanFlightId)
+			enc.Encode("Successful")
+		} else {
+			fmt.Println(req.Method, "SurveysNotesSet failed for", choppedTail, month, day, cleanFlightId)
+			enc.Encode("Failed")
+		}
+
+	} else {
+		fmt.Println(req.Method, "SurveysNotesSet failed for", choppedTail, month, day, cleanFlightId)
+		enc.Encode("Failed")
+	}
+
 }

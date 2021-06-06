@@ -1,5 +1,5 @@
 //var webserver = 'http://MLB-M4244:8080/'
-var webserver = 'http://localhost:8080/'
+//var webserver = 'http://localhost:8080/'
 RegisterGrapher(DeepDive,"Refresh","click")
 var PPOptions = {title: "Portal Platform data"};
 var WapDataOptions = {chart: { title: "WapData"},width: '100%'};
@@ -41,7 +41,7 @@ function DeepDive(UrlParamaters){
   var InfoForPortalPlatformPutLineGraphData = CreateQueryInfo("PortalPlatformMethodPUTTimeAndData",airline,all,tail,"CVM_ACCESS",flightId,PPOptions)
   var InfoForPortalPlatformLanIpOccurances = CreateQueryInfo("PortalPlatformGetRequestsByLanIp",airline,all,tail,"CVM_ACCESS",flightId,PPOptions)
   var InfoForLogPurchaseCommandFromEnglog = CreateQueryInfo("LogPurchaseCommandFromEnglog",airline,all,tail,"EnglogEvents",flightId,PPOptions)
-
+  var InfoForGetEngNotes = CreateQueryInfo("EngNotesGet",airline,date,tail,"EngNotes",flightId)
   cleanSfa()
   getTailIds()
   if(document.getElementById("Tail").value){
@@ -68,11 +68,19 @@ function DeepDive(UrlParamaters){
   }
   // getDeepDiveFPMfastSES(InfoForDeepDiveFPMfast)
   // getDeepDiveDataUsageSummary(InfoForDeepDiveUsage)
-
+  getEngNotes(InfoForGetEngNotes)
   getEnglogEvents(InfoForLanIpGraph)
   getMonitSummary(InfoForMonitSummaryTable)
   //getDeepDiveDataSpecificParser has a dependency on the 1st arg having an options element
   /*getDeepDiveDataSpecificParser2(InfoForWapData,WapDataStruct,'wap_data')*/
+}
+function getEngNotes(QueryInfo){
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
+    .then(response => response.json())
+    .then(info => {
+      drawTableFromFlatJson(QueryInfo.parser,EngNoteStruct,'eng_notes_table',QueryInfo,info)
+    });
 }
 function getLogPurchaseCommandFromEnglog(QueryInfo){
   fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+

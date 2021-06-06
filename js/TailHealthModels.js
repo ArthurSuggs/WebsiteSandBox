@@ -23,6 +23,32 @@ var ScoreLineGraphStruct = [
     ['number', 'wap2score'],
     ['number', 'wap3score']
 ]
+var SurveyStruct = [
+  ['string', 'tail'],
+  ['string', 'month'],
+  ['string', 'day'],
+  ['string', 'departure'],
+  ['string', 'destination'],
+  ['string', 'flightid'],
+  ['string', 'overall'],
+  ['string', 'issuesyn'],
+  ['string', 'issueactivities'],
+  ['string', 'classification'],
+  ['string', 'notes']
+]
+var SurveyPieStruct = [
+  ['string', 'Classification','Classification'],
+  ['number', 'Total','Total of each Survey Classification']
+]
+
+var EngNotesPieStruct = [
+  ['string', 'Classification','Classification'],
+  ['number', 'Total','Total of each Engineering notes Classification']
+]
+var SurveyHistogramStruct = [
+  ['string', 'flightid'],
+  ['string', 'classification']
+]
 var DarkAircraftStruct = [
   ['string', 'Tail'],
   ['string', 'Type'],

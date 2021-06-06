@@ -40,6 +40,7 @@
 	  <a id="TailHealthAnchor" href="TailHealth">Tail Health</a>
     <a id="SingleFlightAnalysisFlytnet" href="/singleFlightAnalysisFlytnet">Single Flight Analysis Flytnet</a>
     <a id="UserAnalysisAnchor" href="UserAnalysis">User Analysis</a><br><br>
+
 </div>
 <!-- End of sidenav menu -->
 
@@ -85,6 +86,11 @@
 	   <!-- <input type=text id="Date" name="Date" value="20210401"><br> -->
 	   </div><br>
 
+	   <input type="radio" id="TablesOn" name="TablesOn" value="TablesOn">
+		<label for="TablesOn">TablesOn</label><br>
+		<input type="radio" id="TablesOff" name="TablesOn" value="TablesOff">
+		<label for="TablesOff">TablesOff</label><br>
+
 	</div><br><br><br><br><br><br><br><br><br>
 
 
@@ -92,12 +98,50 @@
 	<div id="datascreen">
 	  <div class="center">
 	  <button id="Refresh" class="refreshbutton">Refresh</button><br>
-    <input type="radio" id="TablesOn" name="TablesOn" value="TablesOn">
-    <label for="TablesOn">TablesOn</label><br>
-    <input type="radio" id="TablesOff" name="TablesOn" value="TablesOff">
-    <label for="TablesOff">TablesOff</label><br>
+
+	<label for="formIdSubmit">Engineering Notes</label><br>
+	<form id="formIdSubmit" method="POST">
+      <textarea rows = "10" cols = "120" name="dataEntry" id="dataEntry"></textarea><br>
+      <label for="Classification">Classification</label><br>
+      <select id="Classification" name="Classification" style= "width:25%">
+    	<option value="None">None</option>
+    	<option value="Antenna">Antenna</option>
+    	<option value="Modem">Modem</option>
+    	<option value="GroundServices">GroundServices</option>
+      <option value="MPS">MPS</option>
+      <option value="SolarFlare">SolarFlare</option>
+    	<option value="Software">Software</option><br>
+      <input type="submit" id="submitNotes" value="Submit Notes">
+    </form>
+	<form id="formSurveySubmit" method="POST">
+      <textarea rows = "10" cols = "120" name="SurveyNotes" id="SurveyNotes"></textarea><br>
+      <label for="SurveyClassification">Classification</label><br>
+      <select id="SurveyClassification" name="SurveyClassification" style= "width:25%">
+    	<option value="Needs Further Invest">Needs Further Invest</option>
+    	<option value="Aloha">Aloha</option>
+    	<option value="TX Congestion">TX Congestion</option>
+    	<option value="Throughput">Throughput</option>
+		<option value="Application (Streaming)">Application (Streaming)</option>
+		<option value="Gate to Gate">Gate to Gate</option>
+		<option value="Gateway or Aloha">Gateway or Aloha</option>
+		<option value="Downlink">Downlink</option>
+		<option value="Positive Compliant">Positive Compliant</option>
+		<option value="Ranging">Ranging</option>
+		<option value="Dark Aircraft">Dark Aircraft</option>
+		<option value="Gateway">Gateway</option>
+		<option value="Portal (Setup)">Portal (Setup)</option>
+		<option value="Geo-Fencing">Geo-Fencing</option>
+		<option value="KRFU">KRFU</option>
+		<option value="Payment Complaint">Payment Complaint</option>
+		<option value="Squidguard">Squidguard</option>
+    	<option value="User Session Failure">User Session Failure</option><br>
+      <option value="Processes Restarted">Processes Restarted</option><br>
+      <input type="submit" id="submitSurvey" value="Submit Survey Notes">
+    </form>
+
 	  </div>
 		  <div id="singleFlightAnalysis" class="corners"></div>
+	  <div id="eng_notes_table" class="corners"></div><br>
       <div id="udptrace_pie_connected" class="corners"></div><div id="udptrace_pie_term" class="corners"></div><br>
       <div id="time_line" class="corners"></div><br>
       <div id="fpm_udptrace_table"class="corners"></div><br>

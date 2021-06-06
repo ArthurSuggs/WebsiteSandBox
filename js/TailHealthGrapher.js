@@ -16,21 +16,28 @@ function TailHealth(UrlParamaters) {
   var InfoForUdpTraceSummaryTailHealth = CreateQueryInfo("mongoData",airline,date,tail,"UdpTraceSummary",all)
   var InfoForFPMfastSESandUDPTraceTailHealth = CreateQueryInfo("FPMfastSESandUDPTrace",airline,date,tail,"UdpTraceSummary",all)
   var InfoForDarkAircraft = CreateQueryInfo("DarkAircraft",airline,date,tail,"",all)
+  var InfoForSurveys = CreateQueryInfo("Surveys",airline,date,tail,"",all)
+  var InfoForSurveysClassPieChart = CreateQueryInfo("SurveyClass",airline,date,tail,"",all)
+ // var InfoForEngNotes = CreateQueryInfo("Surveys",airline,date,tail,"",all)
+  var InfoForEngNotesTailClassPieChart = CreateQueryInfo("EngNotesTailClass",airline,date,tail,"EngNotes",all)
   cleanTailHealth()
   getTailIds()
   if(InfoForTailHealthFPMfast.airline !== "SPIRIT"){
     InfoForTailHealthFPMfast.parser = "FPMfast"
     InfoForSWVersions.parser = "SWVersions"
     InfoForSWVersions.struct = SWVersionsStruct
+    getDarkAircraft(InfoForDarkAircraft)
   } else {
+    getSurveys(InfoForSurveys)
+    getSurveysClass(InfoForSurveysClassPieChart)
     getDeepDiveDataUdptraceSummary(InfoForUdpTraceSummaryTailHealth)
     getFPMFastUdpTrace(InfoForFPMfastSESandUDPTraceTailHealth,"fpm_udptrace_table")
   }
+  getEngNotesTailClass(InfoForEngNotesTailClassPieChart)
   getSWVersions(InfoForSWVersions)
   getTailHealthFPMfastSES(InfoForTailHealthFPMfast)
   getLogOffload(InfoForTailHealthLogOffload)
-  getDarkAircraft(InfoForDarkAircraft)
-//  getUserCntPerFlight(InfoForUserCntPerFlight,UsersPerFlightLineStruct,"")
+  //  getUserCntPerFlight(InfoForUserCntPerFlight,UsersPerFlightLineStruct,"")
 }
 //COMMON with tail Health
 function getDeepDiveDataUdptraceSummary(QueryInfo) {
@@ -124,6 +131,35 @@ function getLogOffload(QueryInfo) {
       QueryInfo.options = { chart: { title: 'v',}}
       //QueryInfo.options.title = "Offloads - Scatter"
       drawScatterChartFromArrayOfFlatJSON(QueryInfo.parser,LogOffloadPerFileScatterChartStruct,'log_offload_scatter',QueryInfo,info)
+    });
+}
+function getSurveys(QueryInfo) {
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
+    .then(response => response.json())
+    .then(info => {
+      drawTableFromFlatJson(QueryInfo.parser,SurveyStruct,"dark_table",QueryInfo,info)
+    });
+}
+function getEngNotesTailClass(QueryInfo) {
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
+    .then(response => response.json())
+    .then(info => {
+	QueryInfo.options = {'title':"Engineering Notes Classifications - Pie", showTextEvery:1, width: '100%',
+          bar: {groupWidth: "95%"}}
+      drawPieChartPP(QueryInfo.parser,EngNotesPieStruct,"eng_notes_pie",QueryInfo,info)
+    });
+}
+
+function getSurveysClass(QueryInfo) {
+  fetch(webserver+QueryInfo.url+'?Airline='+QueryInfo.airline+'&Parser='+QueryInfo.parser+
+  '&TailId='+QueryInfo.tail+'&FlightId='+QueryInfo.flightId+'&DateYYYYMMDD='+QueryInfo.date)
+    .then(response => response.json())
+    .then(info => {
+      QueryInfo.options = {'title':"Survey -> classification - Pie", showTextEvery:1, width: '100%',
+          bar: {groupWidth: "95%"}}
+      drawPieChartPP(QueryInfo.parser,SurveyPieStruct,'dark_histogram',QueryInfo,info)
     });
 }
 function getDarkAircraft(QueryInfo) {

@@ -1,5 +1,5 @@
 //var webserver = 'http://MLB-M4244:8080/'
-var webserver = 'http://localhost:8080/'
+//var webserver = 'http://localhost:8080/'
 RegisterGrapher(FleetHealth,"Refresh","click")
 
 var HealthHistogramsOptions = {chart: { title: "Health Histograms"},width: '100%'};

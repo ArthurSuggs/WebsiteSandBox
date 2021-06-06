@@ -4,7 +4,7 @@ google.charts.load('current', {'packages':['table']});
 google.charts.load('current', {'packages':['timeline']});
 google.charts.load('current', {'packages':['scatter']});
 //var webserver = 'http://MLB-M4244:8080/'
-var webserver = 'http://localhost:8080/'
+//var webserver = 'http://localhost:8080/'
 
 var UsageDetailsOptions  = {chart: { title: "UsageDetails"},width: '50%'};
 populateDateWithTodaysDate()

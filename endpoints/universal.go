@@ -3,11 +3,13 @@ package endpoints
 import (
 	"encoding/json"
 	"fmt"
+	//"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/ArthurSuggs/WebsiteSandBox/common"
 )
@@ -185,4 +187,103 @@ func MongoData(res http.ResponseWriter, req *http.Request) {
 	enc.Encode(data)
 	fmt.Println(req.Method, "mongoData with Airline:", Airline, "ParserName", ParserName, "Records found: ", len(data))
 	fmt.Println(Airline + "_" + TailId + "_" + FlightId + "_" + DateYYYYMMDD)
+}
+func EngNotesSet(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "EngNotes"
+	Airline := ""
+	FlightId := ""
+	TailId := ""
+	DataEntry := ""
+	Classification := ""
+	DateYYYYMMDD := ""
+	for key, values := range req.Form {
+		fmt.Println(key)
+		for _, value := range values {
+			fmt.Println(value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "FlightId":
+				FlightId = value
+			case "TailId":
+				TailId = value
+			case "dataEntry":
+				DataEntry = value
+			case "Classification":
+				Classification = value
+			case "DateYYYYMMDD":
+				DateYYYYMMDD = value
+			}
+		}
+	}
+	ms := common.CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := ms.FindEngNotesForFlight(FlightId)
+	newNote := true
+	currentTime := time.Now()
+	notes := common.EngNotes{
+		TailId:         TailId,
+		FlightId:       FlightId,
+		DateYYYYMMDD:   DateYYYYMMDD,
+		Classification: Classification,
+		DataEntry:      DataEntry,
+		EntryTime:      currentTime,
+	}
+
+	for _, note := range data {
+		note.EntryTime = currentTime
+		if notes == note {
+			newNote = false
+			break
+		}
+	}
+	enc := json.NewEncoder(res)
+	if newNote {
+		ms.InsertToCollection(notes)
+		enc.Encode("Entered notes successful")
+		fmt.Println(req.Method, "Getting ", ParserName, FlightId, DataEntry, Classification)
+		fmt.Println(Airline + "_" + TailId + "_" + FlightId)
+	} else {
+		enc.Encode("Entered notes unsuccessful.  Note already exists")
+		fmt.Println(req.Method, ParserName, FlightId, DataEntry, Classification)
+		fmt.Println(Airline + "_" + TailId + "_" + FlightId)
+	}
+
+}
+func EngNotesGet(res http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	ParserName := "EngNotes"
+	Airline := ""
+	FlightId := ""
+	TailId := ""
+	DataEntry := ""
+	Classification := ""
+	for key, values := range req.Form {
+		fmt.Println(key)
+		for _, value := range values {
+			fmt.Println(value)
+			switch key {
+			case "Airline":
+				Airline = value
+			case "FlightId":
+				FlightId = value
+			case "TailId":
+				TailId = value
+			case "dataEntry":
+				DataEntry = value
+			case "Classification":
+				Classification = value
+			}
+		}
+	}
+	ms := common.CreateSessionConnectToDbAndCollection("mongodb://localhost", Airline, ParserName, log.New(os.Stdout, "", log.Ltime))
+	defer ms.DisconnectFromMongo()
+	data := ms.FindEngNotesForFlight(FlightId)
+	enc := json.NewEncoder(res)
+	enc.Encode(data)
+
+	fmt.Println(req.Method, "Getting ", ParserName, FlightId, DataEntry, Classification)
+	fmt.Println(Airline + "_" + TailId + "_" + FlightId)
+
 }
